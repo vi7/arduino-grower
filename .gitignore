@@ -1,0 +1,6 @@
+# SublimeText
+*.sublime-project
+*.sublime-workspace
+
+# macos
+.DS_Store
