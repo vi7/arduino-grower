@@ -1,31 +1,35 @@
-/* temp-rh-pwr-control.ino */
+/*
+ * temp-rh-pwr-control.ino
+ * 
+ * !!! IMPORTANT !!! don't send more that 10 values per second to Blynk
+ */
 
 #include <ESP8266WiFi.h>
-//#include <BlynkSimpleEsp8266.h>
+#include <BlynkSimpleEsp8266_SSL.h>
 #include <SimpleTimer.h>
 #include <DHTesp.h>
+/*
+ * include secrets and credentials
+ * file should be created manually and will be ignored by git
+ */
+#include "secrets.h"
 
 // Comment this out to disable Blynk prints and save space:
-//#define BLYNK_PRINT Serial
+#define BLYNK_PRINT Serial
 #define DHTPIN D0
 #define RELAYPIN D1
+#define BLYNK_LCDPIN V0
 // relay NC output is closed
 #define RELAY_ON LOW
 // relay NC output is opened
 #define RELAY_OFF HIGH
-
-////////////////////
-// Blynk Settings //
-////////////////////
-//char BlynkAuth[] = "142da76c91af47b192d396xxxxxxxxx";
-//char WiFiNetwork[] = "xxxxxxWlan";
-//char WiFiPassword[] = "xxx_xxx_xxx_xxx";
 
 const uint8_t MAX_TEMP = 40;
 const uint8_t TEMP_HYSTERESIS = 5;
 
 SimpleTimer timer;
 DHTesp dht;
+WidgetLCD lcd(BLYNK_LCDPIN);
 float temp,rH;
 long dhtReadInterval;
 
@@ -40,14 +44,12 @@ void setup() {
   Serial.print("\n\n" + boardIdentity);
   Serial.println(F(" is up. Hey there!"));
   
+  initBlynk();
   initDHT();
   initRelay();
   
   // schedule dataHandler() func execution
   timer.setInterval(dhtReadInterval, dataHandler);
-
-//    // Initialize Blynk
-//    Blynk.begin(BlynkAuth, WiFiNetwork, WiFiPassword);
 
 }
 
@@ -56,8 +58,7 @@ void setup() {
 /********/
 void loop() {
   
-//    Blynk.run();
-
+  Blynk.run();
   timer.run();
 }
 
@@ -80,10 +81,11 @@ void dataHandler() {
   Serial.println(rH);
   
   checkTemp();
+  sendData();
+}
 
-//  Blynk.virtualWrite(10, t); // virtual pin
-//  Blynk.virtualWrite(11, h); // virtual pin
-
+void initBlynk() {
+  Blynk.begin(BLYNK_AUTH, WIFI_SSID, WIFI_PSK);
 }
 
 void initDHT() {
@@ -116,4 +118,12 @@ void checkTemp() {
 
 void powerOff(bool isOff) {
   isOff ? digitalWrite(RELAYPIN, RELAY_OFF) : digitalWrite(RELAYPIN, RELAY_ON);
+}
+
+void sendData() {
+  String tempStr = "Temp: " + String(temp, 1) + "℃";
+  String rHStr = "RH: " + String(rH, 0) + "%";
+  lcd.clear();
+  lcd.print(0, 0, tempStr); // use: (position X: 0-15, position Y: 0-1, "Message you want to print")
+  lcd.print(0, 1, rHStr);
 }

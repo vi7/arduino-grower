@@ -4,3 +4,6 @@
 
 # macos
 .DS_Store
+
+# secrets
+secrets.h
