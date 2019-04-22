@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+
+    <link crossorigin="anonymous" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="script.js"></script>
+
+    <title>Arduino grower</title>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Arduino grower</h1>
+
+    <div class="input-group mb-3 col-sm-8 mx-auto">
+        <input aria-describedby="button-addon1" class="form-control" placeholder="IP" type="text">
+        <div class="input-group-append">
+            <button class="btn btn-outline-secondary" id="button-addon1" type="button">IP</button>
+        </div>
+    </div>
+
+   <div class="card-deck mb-3 text-center">
+       <div class="card mb-4 shadow-sm">
+           <div class="card-header">
+               <h4 class="my-0 font-weight-normal">Temperature</h4>
+           </div>
+           <div class="card-body">
+               <h1 class="card-title" id="temperature">N/A</h1>
+
+               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="refreshTemperature()">
+                   <img src="refresh-icon.png" alt="Refresh" height="30px">
+               </button>
+           </div>
+       </div>
+
+       <div class="card mb-4 shadow-sm">
+           <div class="card-header">
+               <h4 class="my-0 font-weight-normal">Humidity</h4>
+           </div>
+           <div class="card-body">
+               <h1 class="card-title" id="humidity">N/A</h1>
+               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="refreshHumidity()">
+                   <img src="refresh-icon.png" alt="Refresh" height="30px">
+               </button>
+           </div>
+       </div>
+
+       <div class="card mb-4 shadow-sm">
+           <div class="card-header">
+               <h4 class="my-0 font-weight-normal">Power</h4>
+           </div>
+           <div class="card-body">
+               <h1 class="card-title" id="power-status">N/A</h1>
+               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="refreshPowerStatus()">
+                   <img src="refresh-icon.png" alt="Refresh" height="30px">
+               </button>
+           </div>
+       </div>
+
+   </div>
+</div>
+</body>
+</html>
