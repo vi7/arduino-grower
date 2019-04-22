@@ -32,6 +32,8 @@ DHTesp dht;
 WidgetLCD lcd(BLYNK_LCDPIN);
 float temp,rH;
 long dhtReadInterval;
+WiFiServer server(80);
+String request;
 
 /*********/ 
 /* SETUP */
@@ -51,6 +53,12 @@ void setup() {
   // schedule dataHandler() func execution
   timer.setInterval(dhtReadInterval, dataHandler);
 
+  Serial.println("");
+  Serial.println("WiFi connected.");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  server.begin();
+
 }
 
 /********/ 
@@ -60,6 +68,48 @@ void loop() {
   
   Blynk.run();
   timer.run();
+
+  WiFiClient client = server.available();
+
+  if (client) {
+      Serial.println("New Client.");
+      String currentLine = "";
+      while (client.connected()) {
+          if (client.available()) {
+              char c = client.read();
+              Serial.write(c);
+              request += c;
+              if (c == '\n') {
+                  if (currentLine.length() == 0) {
+
+                      client.println("HTTP/1.1 200 OK");
+                      client.println("Content-type:application/json");
+                      client.println("Access-Control-Allow-Origin: *");
+                      client.println("Connection: close");
+                      client.println();
+
+                      //todo implement with switch
+                      if (request.indexOf("GET /v1/dht/temperature") >= 0) {
+                          client.println("{\"temperature\":\"" + String(temp, 1) +"\"}");
+
+                      } else if (request.indexOf("GET /v1/dht/humidity") >= 0) {
+                          client.println("{\"humidity\":\"" + String(rH, 0) +"\"}");
+                      }
+                      break;
+                  } else {
+                  currentLine = "";
+                  }
+              } else if (c != '\r') { 
+              currentLine += c;    
+              }
+          }
+      }
+
+      request = "";
+      client.stop();
+      Serial.println("Client disconnected.");
+      Serial.println("");
+  }
 }
 
 /*************/ 
