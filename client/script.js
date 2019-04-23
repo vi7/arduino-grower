@@ -28,12 +28,13 @@ function refreshPowerStatus() {
         url: ip + "/v1/relay/power",
         dataType: "json",
         success: function (result) {
-            let power = $("#power-status")[0];
-            power.innerHTML = result.power.toUpperCase();
-            if (result.power) {
-                power.style.color = "#28a745";
+            let powerControl = $("#power-status")[0];
+            if (result.power === "1") {
+                powerControl.innerHTML = "ON";
+                powerControl.style.color = "green";
             } else {
-                power.style.color = "#dc3545"
+                powerControl.innerHTML = "OFF";
+                powerControl.style.color = "red"
             }
         }
     });

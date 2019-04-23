@@ -34,6 +34,7 @@ float temp,rH;
 long dhtReadInterval;
 WiFiServer server(80);
 String request;
+boolean isPowerOn;
 
 /*********/ 
 /* SETUP */
@@ -73,6 +74,8 @@ void loop() {
 
   if (client) {
       Serial.println("New Client.");
+
+      
       String currentLine = "";
       while (client.connected()) {
           if (client.available()) {
@@ -94,7 +97,12 @@ void loop() {
 
                       } else if (request.indexOf("GET /v1/dht/humidity") >= 0) {
                           client.println("{\"humidity\":\"" + String(rH, 0) +"\"}");
+
+                      } else if (request.indexOf("GET /v1/relay/power") >= 0) {
+                          client.println("{\"power\":\"" + String(isPowerOn) +"\"}");
                       }
+                      client.println();
+
                       break;
                   } else {
                   currentLine = "";
@@ -146,6 +154,7 @@ void initDHT() {
 void initRelay() {
   pinMode(RELAYPIN, OUTPUT);
   digitalWrite(RELAYPIN, RELAY_ON);
+  isPowerOn = true;
 }
 
 void getTempRh() {
@@ -166,8 +175,14 @@ void checkTemp() {
   }
 }
 
-void powerOff(bool isOff) {
-  isOff ? digitalWrite(RELAYPIN, RELAY_OFF) : digitalWrite(RELAYPIN, RELAY_ON);
+void powerOff(bool off) {
+  if (off) {
+    digitalWrite(RELAYPIN, RELAY_OFF);
+    isPowerOn = false;
+  } else {
+    digitalWrite(RELAYPIN, RELAY_ON);
+    isPowerOn = true;
+  }
 }
 
 void sendData() {
