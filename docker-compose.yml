@@ -1,0 +1,16 @@
+version: "2.2"
+services:
+
+  nginx:
+    image: nginx:1.16.0-alpine
+    volumes:
+      - /media/service/nginx-data:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    mem_limit: 512m
+    ports:
+      - "8080:80"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
