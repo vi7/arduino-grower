@@ -19,13 +19,15 @@
 #define DHTPIN D0
 #define RELAYPIN D1
 #define BLYNK_LCDPIN V0
+#define BLYNK_GRAPHPIN1 V1
+#define BLYNK_GRAPHPIN2 V2
 // relay NC output is closed
 #define RELAY_ON LOW
 // relay NC output is opened
 #define RELAY_OFF HIGH
 
 const uint8_t MAX_TEMP = 40;
-const uint8_t TEMP_HYSTERESIS = 5;
+const uint8_t TEMP_HYSTERESIS = 10;
 
 SimpleTimer timer;
 DHTesp dht;
@@ -139,6 +141,7 @@ void dataHandler() {
   Serial.println(rH);
   
   checkTemp();
+  // send data to Blynk
   sendData();
 }
 
@@ -186,9 +189,14 @@ void powerOff(bool off) {
 }
 
 void sendData() {
+  // send data to the LCD widget
   String tempStr = "Temp: " + String(temp, 1) + "℃";
   String rHStr = "RH: " + String(rH, 0) + "%";
   lcd.clear();
   lcd.print(0, 0, tempStr); // use: (position X: 0-15, position Y: 0-1, "Message you want to print")
   lcd.print(0, 1, rHStr);
+
+  // send data to the SuperChart widget
+  Blynk.virtualWrite(BLYNK_GRAPHPIN1, temp);
+  Blynk.virtualWrite(BLYNK_GRAPHPIN2, rH);
 }
