@@ -6,7 +6,7 @@ services:
     volumes:
       - /media/service/nginx-data:/usr/share/nginx/html:ro
     restart: unless-stopped
-    mem_limit: 512m
+    mem_limit: 256m
     ports:
       - "8080:80"
     logging:

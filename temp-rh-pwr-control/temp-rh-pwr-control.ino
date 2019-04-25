@@ -77,7 +77,6 @@ void loop() {
   if (client) {
       Serial.println("New Client.");
 
-      
       String currentLine = "";
       while (client.connected()) {
           if (client.available()) {
@@ -86,26 +85,8 @@ void loop() {
               request += c;
               if (c == '\n') {
                   if (currentLine.length() == 0) {
-
-                      client.println("HTTP/1.1 200 OK");
-                      client.println("Content-type:application/json");
-                      client.println("Access-Control-Allow-Origin: *");
-                      client.println("Connection: close");
-                      client.println();
-
-                      //todo implement with switch
-                      if (request.indexOf("GET /v1/dht/temperature") >= 0) {
-                          client.println("{\"temperature\":\"" + String(temp, 1) +"\"}");
-
-                      } else if (request.indexOf("GET /v1/dht/humidity") >= 0) {
-                          client.println("{\"humidity\":\"" + String(rH, 0) +"\"}");
-
-                      } else if (request.indexOf("GET /v1/relay/power") >= 0) {
-                          client.println("{\"power\":\"" + String(isPowerOn) +"\"}");
-                      }
-                      client.println();
-
-                      break;
+                    sendResponse(client);
+                    break;
                   } else {
                   currentLine = "";
                   }
@@ -120,6 +101,26 @@ void loop() {
       Serial.println("Client disconnected.");
       Serial.println("");
   }
+}
+
+void sendResponse(WiFiClient client) {
+  Serial.println("Sending response");
+    client.println("HTTP/1.1 200 OK");
+    client.println("Content-type:application/json");
+    client.println("Access-Control-Allow-Origin: *");
+    client.println("Connection: close");
+    client.println();
+
+    if (request.indexOf("GET /v1/dht/temperature") >= 0) {
+        client.println("{\"temperature\":\"" + String(temp, 1) +"\"}");
+
+    } else if (request.indexOf("GET /v1/dht/humidity") >= 0) {
+        client.println("{\"humidity\":\"" + String(rH, 0) +"\"}");
+
+    } else if (request.indexOf("GET /v1/relay/power") >= 0) {
+        client.println("{\"power\":\"" + String(isPowerOn) +"\"}");
+    }
+    client.println();
 }
 
 /*************/ 
