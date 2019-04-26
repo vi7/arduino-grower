@@ -26,8 +26,8 @@
 // relay NC output is opened
 #define RELAY_OFF HIGH
 
-const uint8_t MAX_TEMP = 40;
-const uint8_t TEMP_HYSTERESIS = 10;
+const uint8_t MAX_TEMP = 28;
+const uint8_t TEMP_HYSTERESIS = 1;
 
 SimpleTimer timer;
 DHTesp dht;
@@ -50,10 +50,10 @@ void setup() {
   Serial.print("\n\n" + boardIdentity);
   Serial.println(F(" is up. Hey there!"));
   
-  initBlynk();
-  initDHT();
   initRelay();
-  
+  initDHT();
+  initBlynk();
+
   // schedule dataHandler() func execution
   timer.setInterval(dhtReadInterval, dataHandler);
 
@@ -119,13 +119,11 @@ void sendResponse(WiFiClient client) {
         client.println("{\"humidity\":\"" + String(rH, 0) +"\"}");
 
     } else if (request.indexOf("GET /v1/relay/power/on") >= 0) {
-        isAutoPowerOn = true;
-        powerOff(false);
+        manualPowerOn();
         client.println("{\"power\":\"" + String(isPowerOn) +"\"}");
         
     } else if (request.indexOf("GET /v1/relay/power/off") >= 0) {
-        isAutoPowerOn = false;
-        powerOff(true);
+        manualPowerOff();
         client.println("{\"power\":\"" + String(isPowerOn) +"\"}");
        
     } else if (request.indexOf("GET /v1/relay/power/status") >= 0) {
@@ -200,6 +198,17 @@ void powerOff(bool off) {
     digitalWrite(RELAYPIN, RELAY_ON);
     isPowerOn = true;
   }
+  Blynk.virtualWrite(V3, isPowerOn);
+}
+
+void manualPowerOn() {
+  isAutoPowerOn = true;
+  powerOff(false);
+}
+
+void manualPowerOff() {
+   isAutoPowerOn = false;
+   powerOff(true);
 }
 
 void sendData() {
@@ -213,4 +222,17 @@ void sendData() {
   // send data to the SuperChart widget
   Blynk.virtualWrite(BLYNK_GRAPHPIN1, temp);
   Blynk.virtualWrite(BLYNK_GRAPHPIN2, rH);
+}
+
+BLYNK_CONNECTED() {
+  Blynk.virtualWrite(V3, isPowerOn);
+}
+
+BLYNK_WRITE(V3) {
+  int buttonOn = param.asInt();
+  if (buttonOn) {
+      manualPowerOn();
+    } else {
+      manualPowerOff();    
+    }
 }
