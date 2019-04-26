@@ -1,8 +1,9 @@
 Environment manager for plant growing
 =====================================
 
-Temperature, RH and power control
----------------------------------
+
+Temperature, relative humidity (RH) and power control
+-----------------------------------------------------
 
 ## Requirements
 
@@ -25,4 +26,10 @@ List of Arduino IDE libs
 
 DHT22 used in the project has been already shipped with PCB and pullup resistor. [Click](resources/dht22-am2302-temperature-humidity.jpeg) to see the picture. Thus should be connected to the `D0` pin of the D1 mini board (no pullup)
 
-Schematics TBD
+*Schematics TBD*
+
+
+Plant nutrition
+---------------
+
+Simple stupid watering solution. See further details in the project [README](plant-nutrition/README.md)
