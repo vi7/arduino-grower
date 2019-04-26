@@ -1,9 +1,17 @@
-const ip = 'http://192.168.1.30:80';
+const pinkponyIp = 'http://192.168.1.30:80';
+
+function getIP() {
+    let ip = document.getElementById("ip-input").value;
+    if ('' !== ip) {
+        return ip;
+    }
+    return pinkponyIp;
+}
 
 function refreshTemperature() {
     $.ajax({
         type: "GET",
-        url: ip + "/v1/dht/temperature",
+        url: getIP() + "/v1/dht/temperature",
         dataType: "json",
         success: function (result) {
             $("#temperature")[0].innerHTML = result.temperature + "°";
@@ -14,7 +22,7 @@ function refreshTemperature() {
 function refreshHumidity() {
     $.ajax({
         type: "GET",
-        url: ip + "/v1/dht/humidity",
+        url: getIP() + "/v1/dht/humidity",
         dataType: "json",
         success: function (result) {
             $("#humidity")[0].innerHTML = result.humidity + "%";
@@ -25,7 +33,7 @@ function refreshHumidity() {
 function refreshPowerStatus() {
     $.ajax({
         type: "GET",
-        url: ip + "/v1/relay/power",
+        url: getIP() + "/v1/relay/power",
         dataType: "json",
         success: function (result) {
             let powerControl = $("#power-status")[0];
@@ -40,12 +48,12 @@ function refreshPowerStatus() {
     });
 }
 
+function refreshAll() {
+    refreshTemperature();
+    refreshHumidity();
+    refreshPowerStatus();
+}
+
 $(document).ready(function () {
-   refreshTemperature();
-   refreshHumidity();
-   refreshPowerStatus();
+    refreshAll();
 });
-
-
-//todo implement on server side: send one response with all sensors values
-//todo implement possibility to set server ip in input field

@@ -20,9 +20,10 @@
     <h1>Arduino grower</h1>
 
     <div class="input-group mb-3 col-sm-8 mx-auto">
-        <input aria-describedby="button-addon1" class="form-control" placeholder="IP" type="text">
+        <!--todo validation by pattern-->
+        <input id="ip-input" aria-describedby="button-addon1" class="form-control" placeholder="IP" type="text">
         <div class="input-group-append">
-            <button class="btn btn-outline-secondary" id="button-addon1" type="button">IP</button>
+            <button class="btn btn-outline-secondary" id="button-addon1" type="button" onclick="refreshAll()">Apply</button>
         </div>
     </div>
 
