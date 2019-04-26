@@ -26,8 +26,8 @@
 // relay NC output is opened
 #define RELAY_OFF HIGH
 
-const uint8_t MAX_TEMP = 28;
-const uint8_t TEMP_HYSTERESIS = 1;
+const uint8_t MAX_TEMP = 40;
+const uint8_t TEMP_HYSTERESIS = 10;
 
 SimpleTimer timer;
 DHTesp dht;
