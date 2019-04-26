@@ -37,6 +37,7 @@ long dhtReadInterval;
 WiFiServer server(80);
 String request;
 boolean isPowerOn;
+boolean isAutoPowerOn;
 
 /*********/ 
 /* SETUP */
@@ -117,7 +118,17 @@ void sendResponse(WiFiClient client) {
     } else if (request.indexOf("GET /v1/dht/humidity") >= 0) {
         client.println("{\"humidity\":\"" + String(rH, 0) +"\"}");
 
-    } else if (request.indexOf("GET /v1/relay/power") >= 0) {
+    } else if (request.indexOf("GET /v1/relay/power/on") >= 0) {
+        isAutoPowerOn = true;
+        powerOff(false);
+        client.println("{\"power\":\"" + String(isPowerOn) +"\"}");
+        
+    } else if (request.indexOf("GET /v1/relay/power/off") >= 0) {
+        isAutoPowerOn = false;
+        powerOff(true);
+        client.println("{\"power\":\"" + String(isPowerOn) +"\"}");
+       
+    } else if (request.indexOf("GET /v1/relay/power/status") >= 0) {
         client.println("{\"power\":\"" + String(isPowerOn) +"\"}");
     }
     client.println();
@@ -159,6 +170,7 @@ void initRelay() {
   pinMode(RELAYPIN, OUTPUT);
   digitalWrite(RELAYPIN, RELAY_ON);
   isPowerOn = true;
+  isAutoPowerOn = true;
 }
 
 void getTempRh() {
@@ -171,6 +183,7 @@ void getTempRh() {
 }
 
 void checkTemp() {
+  if (!isAutoPowerOn) return;
   if (temp >= MAX_TEMP) {
     powerOff(true);
   }

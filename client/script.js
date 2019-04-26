@@ -33,17 +33,43 @@ function refreshHumidity() {
 function refreshPowerStatus() {
     $.ajax({
         type: "GET",
-        url: getIP() + "/v1/relay/power",
+        url: getIP() + "/v1/relay/power/status",
         dataType: "json",
         success: function (result) {
-            let powerControl = $("#power-status")[0];
-            if (result.power === "1") {
-                powerControl.innerHTML = "ON";
-                powerControl.style.color = "green";
-            } else {
-                powerControl.innerHTML = "OFF";
-                powerControl.style.color = "red"
-            }
+          showPowerStat(result);
+        }
+    });
+}
+
+function showPowerStat(result) {
+    let powerControl = $("#power-status")[0];
+    if (result.power === "1") {
+        powerControl.innerHTML = "ON";
+        powerControl.style.color = "green";
+    } else {
+        powerControl.innerHTML = "OFF";
+        powerControl.style.color = "red"
+    }
+}
+
+function powerOn() {
+    $.ajax({
+        type: "GET",
+        url: getIP() + "/v1/relay/power/on",
+        dataType: "json",
+        success: function (result) {
+            showPowerStat(result);
+        }
+    });
+}
+
+function powerOff() {
+    $.ajax({
+        type: "GET",
+        url: getIP() + "/v1/relay/power/off",
+        dataType: "json",
+        success: function (result) {
+            showPowerStat(result);
         }
     });
 }
