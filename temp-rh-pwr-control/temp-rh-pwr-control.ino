@@ -189,7 +189,14 @@ void initBlynk() {
 
 void initDHT() {
   dht.setup(DHTPIN, DHTesp::DHT22);
-  dhtReadInterval = (dht.getMinimumSamplingPeriod());
+//  dhtReadInterval = (dht.getMinimumSamplingPeriod());
+  /* Temporarily increased read interval to debug issues with the DHT sensor 
+   *  
+   *  TODO: revert back to the automatically obtained interval above (dht.getMinimumSamplingPeriod())
+   *  after debugging is finished
+   *  
+   */
+  dhtReadInterval = 4000;
   Serial.println("DHT sensor read interval is: " + String(dhtReadInterval));
 }
 
