@@ -41,6 +41,7 @@
 #define BLYNK_BUTTON1PIN V3
 #define BLYNK_LAMPBRLEDPIN V4
 #define BLYNK_LAMPLEDPIN V5
+#define BLYNK_GRAPHPUMPPIN V6
 
 // relay NC output is closed
 #define RELAY_ON LOW
@@ -54,10 +55,10 @@ const uint8_t MAX_TEMP = 40;
 const uint8_t TEMP_HYSTERESIS = 10;
 
 /* watering constants */
-// water each 5 days - time in milliseconds
-const uint32_t WATER_INTERVAL = 5L * 24L * 60L * 60L * 1000L;
-// est water amount: 500ml - time in seconds
-const uint8_t WATER_DURATION = 9;
+// water each 4 days - time in milliseconds
+const uint32_t WATER_INTERVAL = 4L * 24L * 60L * 60L * 1000L;
+// est water amount: 300ml - time in seconds
+const uint8_t WATER_DURATION = 6;
 
 /* light monitoring constants */
 // lamp check interval in seconds
@@ -101,13 +102,14 @@ void setup() {
   initRelay();
   initDHT();
   initPump();
+  initLamp();
   initBlynk();
   
   // schedule functions execution
   timer.setInterval(dhtReadInterval, tempRhDataHandler);
   timer.setInterval(WATER_INTERVAL, water);
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, lampStatus);
-  timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, checkBlynkConnection);
+  timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, ensureBlynkConnection);
 
   server.begin();
 
@@ -214,12 +216,8 @@ void tempRhDataHandler() {
 }
 
 void water() {
-  digitalWrite(PUMPPIN, PUMP_ON);
-  Serial.println(F("Pump is on"));
-  // TODO: do without a delay using some Timer solution, SimpleTimer doesn't work for that
-  delay(WATER_DURATION * 1000);
-  digitalWrite(PUMPPIN, PUMP_OFF);
-  Serial.println(F("Pump is off"));
+  pumpOn();
+  timer.setTimeout(WATER_DURATION * 1000, pumpOff);
 }
 
 //  TODO: refactor this function to be similar to tempRhDataHandler()
@@ -237,7 +235,8 @@ void lampStatus() {
   sendLampToBlynk(isLampOn, ledBrightness);
 }
 
-void checkBlynkConnection() {
+// TODO: check if this really needed, assuming that Blynk connection still fails after WiFi issues
+void ensureBlynkConnection() {
   if (Blynk.connected()) {
     Serial.println(F("Blynk watchdog: connected to the server"));
   } else {
@@ -281,18 +280,27 @@ void initRelay() {
   digitalWrite(RELAYPIN, RELAY_ON);
   isPowerOn = true;
   isAutoPowerOn = true;
-  isLampOn = isPowerOn;
 }
 
 void initPump() {
   pinMode(PUMPPIN, OUTPUT);
   digitalWrite(PUMPPIN, PUMP_OFF);
+  
+  Blynk.virtualWrite(BLYNK_GRAPHPUMPPIN, 0);
+}
+
+void initLamp() {
+  uint16_t lightVal = getLightValue();
+  isLampOn = lightVal < LAMP_ON_VALUE ? true : false;
 }
 
 
 /****************************/
 /*     HELPER FUNCTIONS     */
 /****************************/
+/* TODO: refactor getTempRh() func to use TempAndHumidity struct
+ * from the DHT lib instead of separate temp and RH vars 
+ */
 void getTempRh() {
   rH = dht.getHumidity();
   temp = dht.getTemperature();
@@ -338,6 +346,22 @@ void manualPowerOn() {
 void manualPowerOff() {
    isAutoPowerOn = false;
    powerOff(true);
+}
+
+void pumpOn() {
+  digitalWrite(PUMPPIN, PUMP_ON);
+  Serial.println(F("Pump is on"));
+  
+  Serial.println(F("Blynk: sending pump status"));
+  Blynk.virtualWrite(BLYNK_GRAPHPUMPPIN, 1);
+}
+
+void pumpOff() {
+  digitalWrite(PUMPPIN, PUMP_OFF);
+  Serial.println(F("Pump is off"));
+
+  Serial.println(F("Blynk: sending pump status"));
+  Blynk.virtualWrite(BLYNK_GRAPHPUMPPIN, 0);
 }
 
 void systemRestart() {
