@@ -13,6 +13,10 @@
  *  - Qreal 180L/H(50ml/s)
  */
 
+/* Comment this out to disable Blynk prints and save space: */
+//#define BLYNK_PRINT Serial // Defines the object that is used for printing
+//#define BLYNK_DEBUG        // Optional, this enables more detailed prints
+
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266_SSL.h>
 #include <SimpleTimer.h>
@@ -24,19 +28,20 @@
  */
 #include "secrets.h"
 
-// Comment this out to disable Blynk prints and save space:
-//#define BLYNK_PRINT Serial
 #define DHTPIN D0
 #define RELAYPIN D1
 #define PUMPPIN D2
 #define PUMPPIN D2
 #define LDRPIN A0
+
+/* Blynk defines */
 #define BLYNK_LCDPIN V0
-#define BLYNK_GRAPHPIN1 V1
-#define BLYNK_GRAPHPIN2 V2
+#define BLYNK_GRAPHTEMPPIN V1
+#define BLYNK_GRAPHRHPIN V2
 #define BLYNK_BUTTON1PIN V3
 #define BLYNK_LAMPBRLEDPIN V4
 #define BLYNK_LAMPLEDPIN V5
+
 // relay NC output is closed
 #define RELAY_ON LOW
 // relay NC output is opened
@@ -55,8 +60,10 @@ const uint32_t WATER_INTERVAL = 5L * 24L * 60L * 60L * 1000L;
 const uint8_t WATER_DURATION = 9;
 
 /* light monitoring constants */
-const uint16_t LIGHT_CHECK_INTERVAL = 1;
-const uint16_t LAMP_ON_VALUE = 200;
+// lamp check interval in seconds
+const uint8_t LIGHT_CHECK_INTERVAL = 1;
+// LDR sensor values. The lower value is the brighter is light.
+const uint8_t LAMP_ON_VALUE = 200;
 const uint16_t LAMP_OFF_VALUE = 900;
 
 SimpleTimer timer;
@@ -65,18 +72,22 @@ float temp,rH;
 uint16_t dhtReadInterval;
 WiFiServer server(80);
 String request;
-boolean isPowerOn;
-boolean isAutoPowerOn;
-boolean isLampOn;
+bool isPowerOn;
+bool isAutoPowerOn;
+bool isLampOn;
 
 /* Blynk stuff */
-WidgetLCD lcd(BLYNK_LCDPIN);
-WidgetLED lampBrLED(BLYNK_LAMPBRLEDPIN);
-WidgetLED lampLED(BLYNK_LAMPLEDPIN);
+// blynk connection check interval in seconds
+const uint8_t BLYNK_CHECK_INTERVAL = 30;
 
-/*********/ 
-/* SETUP */
-/*********/
+WidgetLCD blynkLcd(BLYNK_LCDPIN);
+WidgetLED blynkLampBrLed(BLYNK_LAMPBRLEDPIN);
+WidgetLED blynkLampLed(BLYNK_LAMPLEDPIN);
+
+
+/*****************/
+/*     SETUP     */
+/*****************/
 void setup() {
   
   // init Serial for logging and say Hi
@@ -84,28 +95,28 @@ void setup() {
   const String boardIdentity = ARDUINO_BOARD;
   Serial.print("\n\n" + boardIdentity);
   Serial.println(F(" is up. Hey there!"));
-  
+  Serial.println("");
+
+  initWiFi(WIFI_SSID, WIFI_PSK);
   initRelay();
   initDHT();
-  initBlynk();
   initPump();
+  initBlynk();
   
   // schedule functions execution
   timer.setInterval(dhtReadInterval, tempRhDataHandler);
   timer.setInterval(WATER_INTERVAL, water);
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, lampStatus);
+  timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, checkBlynkConnection);
 
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
   server.begin();
 
 }
 
-/********/
-/* LOOP */
-/********/
+
+/****************/
+/*     LOOP     */
+/****************/
 void loop() {
   
   Blynk.run();
@@ -142,9 +153,10 @@ void loop() {
   }
 }
 
-/*************/ 
-/* FUNCTIONS */
-/*************/ 
+
+/***************************/
+/*        FUNCTIONS        */
+/***************************/
 void sendResponse(WiFiClient client) {
   Serial.println("Sending response");
   client.println("HTTP/1.1 200 OK");
@@ -192,7 +204,7 @@ void tempRhDataHandler() {
   /************  END LOGGING ************/
   
   checkTemp();
-  sendToBlynk();
+  sendTempRhToBlynk();
 }
 
 void water() {
@@ -204,6 +216,7 @@ void water() {
   Serial.println(F("Pump is off"));
 }
 
+//  TODO: refactor this function to be similar to tempRhDataHandler()
 void lampStatus() {
   uint16_t lightVal = getLightValue();
   uint8_t ledBrightness = map(lightVal, 0, 1023, 255, 0);
@@ -211,29 +224,49 @@ void lampStatus() {
   if (lightVal < LAMP_ON_VALUE && !isLampOn) {
     Serial.println(F("LDR sensor: lamp is on"));
     isLampOn = true;
-    lampLED.on();
   } else if (lightVal > LAMP_OFF_VALUE && isLampOn) {
     Serial.println(F("LDR sensor: lamp is off"));
     isLampOn = false;
-    lampLED.off();
   }
-  lampBrLED.setValue(ledBrightness);
+  sendLampToBlynk(isLampOn, ledBrightness);
+}
+
+void checkBlynkConnection() {
+  if (Blynk.connected()) {
+    Serial.println(F("Blynk watchdog: connected to the server"));
+  } else {
+    Serial.println(F("Blynk watchdog: connection to the server FAILED! Reconnecting..."));
+    Blynk.disconnect();
+    Blynk.connect(BLYNK_CHECK_INTERVAL);
+  }
+}
+
+
+/**************************/
+/*     INIT FUNCTIONS     */
+/**************************/
+void initWiFi(String SSID, String PSK) {
+  WiFi.begin(SSID, PSK);
+
+  Serial.print("Connecting to: " + SSID);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.println(F("WiFi connected"));
+  Serial.print(F("IP address: "));
+  Serial.println(WiFi.localIP());
 }
 
 void initBlynk() {
-  Blynk.begin(BLYNK_AUTH, WIFI_SSID, WIFI_PSK);
+  Blynk.config(BLYNK_AUTH);
 }
 
 void initDHT() {
   dht.setup(DHTPIN, DHTesp::DHT22);
-//  dhtReadInterval = (dht.getMinimumSamplingPeriod());
-  /* Temporarily increased read interval to debug issues with the DHT sensor 
-   *  
-   *  TODO: revert back to the automatically obtained interval above (dht.getMinimumSamplingPeriod())
-   *  after debugging is finished
-   *  
-   */
-  dhtReadInterval = 4000;
+  dhtReadInterval = (dht.getMinimumSamplingPeriod());
   Serial.println("DHT sensor read interval is: " + String(dhtReadInterval));
 }
 
@@ -242,6 +275,7 @@ void initRelay() {
   digitalWrite(RELAYPIN, RELAY_ON);
   isPowerOn = true;
   isAutoPowerOn = true;
+  isLampOn = isPowerOn;
 }
 
 void initPump() {
@@ -249,6 +283,10 @@ void initPump() {
   digitalWrite(PUMPPIN, PUMP_OFF);
 }
 
+
+/****************************/
+/*     HELPER FUNCTIONS     */
+/****************************/
 void getTempRh() {
   rH = dht.getHumidity();
   temp = dht.getTemperature();
@@ -258,17 +296,17 @@ void getTempRh() {
   }
 }
 
-uint32_t getLightValue() {
+uint16_t getLightValue() {
   return analogRead(LDRPIN);
 }
 
 // function performs actions when temperature exceeds MAX_TEMP limit
 void checkTemp() {
   if (!isAutoPowerOn) return;
-  if (temp >= MAX_TEMP) {
+  if (temp >= MAX_TEMP && isPowerOn) {
     powerOff(true);
   }
-  else if (temp < MAX_TEMP - TEMP_HYSTERESIS) {
+  else if (temp < MAX_TEMP - TEMP_HYSTERESIS && !isPowerOn) {
     powerOff(false);
   }
 }
@@ -281,6 +319,8 @@ void powerOff(bool yes) {
     digitalWrite(RELAYPIN, RELAY_ON);
     isPowerOn = true;
   }
+  
+  Serial.println(F("Blynk: sending power status"));
   Blynk.virtualWrite(BLYNK_BUTTON1PIN, isPowerOn);
 }
 
@@ -294,18 +334,33 @@ void manualPowerOff() {
    powerOff(true);
 }
 
-void sendToBlynk() {
+void sendTempRhToBlynk() {
+  
+  Serial.println(F("Blynk: sending temperature and RH data"));
+  
   // send data to the LCD widget
   String tempStr = "Temp: " + String(temp, 1) + "℃";
   String rHStr = "RH: " + String(rH, 0) + "%";
-  lcd.clear();
-  lcd.print(0, 0, tempStr); // use: (position X: 0-15, position Y: 0-1, "Message you want to print")
-  lcd.print(0, 1, rHStr);
+  blynkLcd.clear();
+  blynkLcd.print(0, 0, tempStr); // use: (position X: 0-15, position Y: 0-1, "Message you want to print")
+  blynkLcd.print(0, 1, rHStr);
   // send data to the SuperChart widget
-  Blynk.virtualWrite(BLYNK_GRAPHPIN1, temp);
-  Blynk.virtualWrite(BLYNK_GRAPHPIN2, rH);
+  Blynk.virtualWrite(BLYNK_GRAPHTEMPPIN, temp);
+  Blynk.virtualWrite(BLYNK_GRAPHRHPIN, rH);
 }
 
+void sendLampToBlynk(bool isOn, uint8_t brightness) {
+
+  Serial.println(F("Blynk: sending lamp status"));
+  
+  isOn ? blynkLampLed.on() : blynkLampLed.off();
+  blynkLampBrLed.setValue(brightness);
+}
+
+
+/*****************/
+/*     BLYNK     */
+/*****************/
 BLYNK_CONNECTED() {
   Blynk.virtualWrite(BLYNK_BUTTON1PIN, isPowerOn);
 }
