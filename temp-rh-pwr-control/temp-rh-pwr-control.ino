@@ -184,7 +184,13 @@ void sendResponse(WiFiClient client) {
   
   } else if (request.indexOf("GET /v1/lamp/status") >= 0) {
       client.println("{\"lamp\":\"" + String(isLampOn) +"\"}");
+
+  } else if (request.indexOf("GET /v1/system/restart") >= 0) {
+      client.println("{\"restart\":\"OK\"}");
+      delay(500);
+      systemRestart();
   }
+  
   client.println();
 }
 
@@ -332,6 +338,11 @@ void manualPowerOn() {
 void manualPowerOff() {
    isAutoPowerOn = false;
    powerOff(true);
+}
+
+void systemRestart() {
+  Serial.println(F("Restarting device..."));
+  ESP.restart();
 }
 
 void sendTempRhToBlynk() {
