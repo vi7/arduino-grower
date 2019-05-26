@@ -27,8 +27,8 @@ uint8_t pump2WaterDuration = 7;
 // pump3 - est water amount: 350ml - time in seconds
 uint8_t pump3WaterDuration = 7;
 
-// water each 5 days - value in miliseconds
-uint32_t waterInterval = 5L * 24L * 60L * 60L * 1000L;
+// water each 4 days - value in miliseconds
+uint32_t waterInterval = 4L * 24L * 60L * 60L * 1000L;
 
 // TODO: review if it's still needed after refactoring
 uint8_t interPumpDelay = 1;
