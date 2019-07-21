@@ -28,9 +28,10 @@
  */
 #include "secrets.h"
 
-#define DHTPIN D0
-#define RELAYPIN D1
-#define PUMPPIN D2
+#define DHTPIN D3
+#define LAMPRELAYPIN D1
+#define FANRELAYPIN D0
+#define HUMRELAYPIN D4
 #define PUMPPIN D2
 #define LDRPIN A0
 
@@ -42,11 +43,13 @@
 #define BLYNK_LAMPBRLEDPIN V4
 #define BLYNK_LAMPLEDPIN V5
 #define BLYNK_GRAPHPUMPPIN V6
+#define BLYNK_FANLEDPIN V7
+#define BLYNK_HUMLEDPIN V8
 
-// relay NC output is closed
+/* normally closed (NC) relay NC defines */
 #define RELAY_ON LOW
-// relay NC output is opened
 #define RELAY_OFF HIGH
+
 #define PUMP_ON HIGH
 #define PUMP_OFF LOW
 
@@ -69,13 +72,13 @@ const uint16_t LAMP_OFF_VALUE = 900;
 
 SimpleTimer timer;
 DHTesp dht;
-float temp,rH;
+float temp, rH;
 uint16_t dhtReadInterval;
 WiFiServer server(80);
 String request;
-bool isPowerOn;
-bool isAutoPowerOn;
-bool isLampOn;
+bool isLampPowerOn, isLampAutoPowerOn, isLampOn;
+bool isFanPowerOn;
+bool isHumPowerOn;
 
 /* Blynk stuff */
 // blynk connection check interval in seconds
@@ -84,6 +87,8 @@ const uint8_t BLYNK_CHECK_INTERVAL = 30;
 WidgetLCD blynkLcd(BLYNK_LCDPIN);
 WidgetLED blynkLampBrLed(BLYNK_LAMPBRLEDPIN);
 WidgetLED blynkLampLed(BLYNK_LAMPLEDPIN);
+WidgetLED blynkFanLed(BLYNK_FANLEDPIN);
+WidgetLED blynkHumLed(BLYNK_HUMLEDPIN);
 
 
 /*****************/
@@ -99,11 +104,15 @@ void setup() {
   Serial.println("");
 
   initWiFi(WIFI_SSID, WIFI_PSK);
-  initRelay();
+  initLampRelay();
   initDHT();
   initPump();
   initLamp();
   initBlynk();
+
+  // Blynk dependant functions
+  timer.setTimeout(2000, initFanRelay);
+  timer.setTimeout(2000, initHumRelay);
   
   // schedule functions execution
   timer.setInterval(dhtReadInterval, tempRhDataHandler);
@@ -167,6 +176,9 @@ void sendResponse(WiFiClient client) {
   client.println("Connection: close");
   client.println();
 
+  /*
+   * APIv1 code
+   */ 
   if (request.indexOf("GET /v1/dht/temperature") >= 0) {
       client.println("{\"temperature\":\"" + String(temp, 1) +"\"}");
 
@@ -174,15 +186,15 @@ void sendResponse(WiFiClient client) {
       client.println("{\"humidity\":\"" + String(rH, 0) +"\"}");
 
   } else if (request.indexOf("GET /v1/relay/power/on") >= 0) {
-      manualPowerOn();
-      client.println("{\"power\":\"" + String(isPowerOn) +"\"}");
+      manualLampPowerOn();
+      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
       
   } else if (request.indexOf("GET /v1/relay/power/off") >= 0) {
-      manualPowerOff();
-      client.println("{\"power\":\"" + String(isPowerOn) +"\"}");
+      manualLampPowerOff();
+      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
      
   } else if (request.indexOf("GET /v1/relay/power/status") >= 0) {
-      client.println("{\"power\":\"" + String(isPowerOn) +"\"}");
+      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
   
   } else if (request.indexOf("GET /v1/lamp/status") >= 0) {
       client.println("{\"lamp\":\"" + String(isLampOn) +"\"}");
@@ -191,6 +203,43 @@ void sendResponse(WiFiClient client) {
       client.println("{\"restart\":\"OK\"}");
       delay(500);
       systemRestart();
+
+  /*
+   * APIv2 code
+   */ 
+  } else if (request.indexOf("GET /v2/relay/lamp/power/on") >= 0) {
+      manualLampPowerOn();
+      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
+      
+  } else if (request.indexOf("GET /v2/relay/lamp/power/off") >= 0) {
+      manualLampPowerOff();
+      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
+     
+  } else if (request.indexOf("GET /v2/relay/lamp/power/status") >= 0) {
+      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
+
+  } else if (request.indexOf("GET /v2/relay/fan/power/on") >= 0) {
+      manualFanPower(true);
+      client.println("{\"power\":\"" + String(isFanPowerOn) +"\"}");
+      
+  } else if (request.indexOf("GET /v2/relay/fan/power/off") >= 0) {
+      manualFanPower(false);
+      client.println("{\"power\":\"" + String(isFanPowerOn) +"\"}");
+     
+  } else if (request.indexOf("GET /v2/relay/fan/power/status") >= 0) {
+      client.println("{\"power\":\"" + String(isFanPowerOn) +"\"}");
+
+  } else if (request.indexOf("GET /v2/relay/hum/power/on") >= 0) {
+      manualHumPower(true);
+      client.println("{\"power\":\"" + String(isHumPowerOn) +"\"}");
+      
+  } else if (request.indexOf("GET /v2/relay/hum/power/off") >= 0) {
+      manualHumPower(false);
+      client.println("{\"power\":\"" + String(isHumPowerOn) +"\"}");
+     
+  } else if (request.indexOf("GET /v2/relay/hum/power/status") >= 0) {
+      client.println("{\"power\":\"" + String(isHumPowerOn) +"\"}");
+
   }
   
   client.println();
@@ -270,16 +319,27 @@ void initBlynk() {
 }
 
 void initDHT() {
+  pinMode(DHTPIN, INPUT_PULLUP);
   dht.setup(DHTPIN, DHTesp::DHT22);
   dhtReadInterval = (dht.getMinimumSamplingPeriod());
   Serial.println("DHT sensor read interval is: " + String(dhtReadInterval));
 }
 
-void initRelay() {
-  pinMode(RELAYPIN, OUTPUT);
-  digitalWrite(RELAYPIN, RELAY_ON);
-  isPowerOn = true;
-  isAutoPowerOn = true;
+void initLampRelay() {
+  pinMode(LAMPRELAYPIN, OUTPUT);
+  digitalWrite(LAMPRELAYPIN, RELAY_ON);
+  isLampPowerOn = true;
+  isLampAutoPowerOn = true;
+}
+
+void initFanRelay() {
+  pinMode(FANRELAYPIN, OUTPUT);
+  isFanPowerOn = commonPower(FANRELAYPIN, true, &blynkFanLed);
+}
+
+void initHumRelay() {
+  pinMode(HUMRELAYPIN, OUTPUT);
+  isHumPowerOn = commonPower(HUMRELAYPIN, true, &blynkHumLed);
 }
 
 void initPump() {
@@ -295,9 +355,9 @@ void initLamp() {
 }
 
 
-/****************************/
-/*     HELPER FUNCTIONS     */
-/****************************/
+/*****************************/
+/*     UTILITY FUNCTIONS     */
+/*****************************/
 /* TODO: refactor getTempRh() func to use TempAndHumidity struct
  * from the DHT lib instead of separate temp and RH vars 
  */
@@ -316,36 +376,61 @@ uint16_t getLightValue() {
 
 // function performs actions when temperature exceeds MAX_TEMP limit
 void checkTemp() {
-  if (!isAutoPowerOn) return;
-  if (temp >= MAX_TEMP && isPowerOn) {
+  if (!isLampAutoPowerOn) return;
+  if (temp >= MAX_TEMP && isLampPowerOn) {
     powerOff(true);
   }
-  else if (temp < MAX_TEMP - TEMP_HYSTERESIS && !isPowerOn) {
+  else if (temp < MAX_TEMP - TEMP_HYSTERESIS && !isLampPowerOn) {
     powerOff(false);
   }
 }
 
+// TODO: use commonPowerOff() func instead of this one for lamp power control
 void powerOff(bool yes) {
   if (yes) {
-    digitalWrite(RELAYPIN, RELAY_OFF);
-    isPowerOn = false;
+    digitalWrite(LAMPRELAYPIN, RELAY_OFF);
+    isLampPowerOn = false;
   } else {
-    digitalWrite(RELAYPIN, RELAY_ON);
-    isPowerOn = true;
+    digitalWrite(LAMPRELAYPIN, RELAY_ON);
+    isLampPowerOn = true;
   }
   
   Serial.println(F("Blynk: sending power status"));
-  Blynk.virtualWrite(BLYNK_BUTTON1PIN, isPowerOn);
+  Blynk.virtualWrite(BLYNK_BUTTON1PIN, isLampPowerOn);
 }
 
-void manualPowerOn() {
-  isAutoPowerOn = true;
+bool commonPower(uint8_t pin, bool enabled, WidgetLED *led) {
+  bool isOn;
+  if (enabled) {
+    digitalWrite(pin, RELAY_ON);
+    isOn = true;
+    Serial.println("Blynk: enabling led for pin: " + String(pin));
+    led->on();
+  } else {
+    digitalWrite(pin, RELAY_OFF);
+    isOn = false;
+    Serial.println("Blynk: disabling led for pin: " + String(pin));
+    led->off();
+  }
+  return isOn;
+}
+
+void manualLampPowerOn() {
+  isLampAutoPowerOn = true;
   powerOff(false);
 }
 
-void manualPowerOff() {
-   isAutoPowerOn = false;
+void manualLampPowerOff() {
+   isLampAutoPowerOn = false;
    powerOff(true);
+}
+
+void manualFanPower(bool enabled) {
+  isFanPowerOn = commonPower(FANRELAYPIN, enabled, &blynkFanLed);
+}
+
+void manualHumPower(bool enabled) {
+  isHumPowerOn = commonPower(HUMRELAYPIN, enabled, &blynkHumLed);
 }
 
 void pumpOn() {
@@ -397,14 +482,14 @@ void sendLampToBlynk(bool isOn, uint8_t brightness) {
 /*     BLYNK     */
 /*****************/
 BLYNK_CONNECTED() {
-  Blynk.virtualWrite(BLYNK_BUTTON1PIN, isPowerOn);
+  Blynk.virtualWrite(BLYNK_BUTTON1PIN, isLampPowerOn);
 }
 
 BLYNK_WRITE(BLYNK_BUTTON1PIN) {
   int buttonOn = param.asInt();
   if (buttonOn) {
-      manualPowerOn();
+      manualLampPowerOn();
     } else {
-      manualPowerOff();    
+      manualLampPowerOff();    
     }
 }
