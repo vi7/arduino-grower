@@ -21,49 +21,55 @@
 
     <div class="input-group mb-3 col-sm-8 mx-auto">
         <!--todo validation by pattern-->
-        <input id="ip-input" aria-describedby="button-addon1" class="form-control" placeholder="IP" type="text">
+        <input id="ip-input" aria-describedby="button-addon1" class="form-control" type="text">
         <div class="input-group-append">
-            <button class="btn btn-outline-secondary" id="button-addon1" type="button" onclick="refreshAll()">Apply</button>
+            <button class="btn btn-outline-secondary" id="button-addon1" type="button" onclick="refreshAll()">Refresh</button>
         </div>
     </div>
 
    <div class="card-deck mb-3 text-center">
        <div class="card mb-4 shadow-sm">
            <div class="card-header">
-               <h4 class="my-0 font-weight-normal">Temperature</h4>
+               <h4 class="my-0 font-weight-normal">Status</h4>
            </div>
            <div class="card-body">
+               <h4>Temperature: </h4>
                <h1 class="card-title" id="temperature">N/A</h1>
-
-               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="refreshTemperature()">
-                   <img src="refresh-icon.png" alt="Refresh" height="30px">
-               </button>
-           </div>
-       </div>
-
-       <div class="card mb-4 shadow-sm">
-           <div class="card-header">
-               <h4 class="my-0 font-weight-normal">Humidity</h4>
-           </div>
-           <div class="card-body">
+               <h4>Humidity: </h4>
                <h1 class="card-title" id="humidity">N/A</h1>
-               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="refreshHumidity()">
-                   <img src="refresh-icon.png" alt="Refresh" height="30px">
-               </button>
            </div>
        </div>
 
        <div class="card mb-4 shadow-sm">
            <div class="card-header">
-               <h4 class="my-0 font-weight-normal">Power</h4>
+               <h4 class="my-0 font-weight-normal">Lamp power</h4>
            </div>
            <div class="card-body">
-               <h1 class="card-title" id="power-status">N/A</h1>
-               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="refreshPowerStatus()">
-                   <img src="refresh-icon.png" alt="Refresh" height="30px">
-               </button>
-               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOn()">ON</button>
-               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOff()">OFF</button>
+               <h1 class="card-title" id="lamp-power-status">N/A</h1>
+               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOn('lamp')">ON</button>
+               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOff('lamp')">OFF</button>
+           </div>
+       </div>
+
+       <div class="card mb-4 shadow-sm">
+           <div class="card-header">
+               <h4 class="my-0 font-weight-normal">Fan power</h4>
+           </div>
+           <div class="card-body">
+               <h1 class="card-title" id="fan-power-status">N/A</h1>
+               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOn('fan')">ON</button>
+               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOff('fan')">OFF</button>
+           </div>
+       </div>
+
+       <div class="card mb-4 shadow-sm">
+           <div class="card-header">
+               <h4 class="my-0 font-weight-normal">Humidifier power</h4>
+           </div>
+           <div class="card-body">
+               <h1 class="card-title" id="hum-power-status">N/A</h1>
+               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOn('hum')">ON</button>
+               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOff('hum')">OFF</button>
            </div>
        </div>
 

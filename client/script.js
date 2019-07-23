@@ -1,11 +1,10 @@
-const pinkponyIp = 'http://192.168.1.30:80';
+const pinkponyIp = 'http://192.168.1.30';
 
 function getIP() {
     let ip = document.getElementById("ip-input").value;
     if ('' !== ip) {
         return ip;
-    }
-    return pinkponyIp;
+    } else return pinkponyIp;
 }
 
 function refreshTemperature() {
@@ -30,19 +29,20 @@ function refreshHumidity() {
     });
 }
 
-function refreshPowerStatus() {
+
+function refreshPowerStatus(device) {
     $.ajax({
         type: "GET",
-        url: getIP() + "/v1/relay/power/status",
+        url: getIP() + "/v2/relay/" + device + "/power/status",
         dataType: "json",
         success: function (result) {
-          showPowerStat(result);
+            showPowerStat(device, result);
         }
     });
 }
 
-function showPowerStat(result) {
-    let powerControl = $("#power-status")[0];
+function showPowerStat(device, result) {
+    let powerControl = document.getElementById(device + "-power-status");
     if (result.power === "1") {
         powerControl.innerHTML = "ON";
         powerControl.style.color = "green";
@@ -52,24 +52,24 @@ function showPowerStat(result) {
     }
 }
 
-function powerOn() {
+function powerOn(device) {
     $.ajax({
         type: "GET",
-        url: getIP() + "/v1/relay/power/on",
+        url: getIP() + "/v2/relay/" + device + "/power/on",
         dataType: "json",
         success: function (result) {
-            showPowerStat(result);
+            showPowerStat(device, result);
         }
     });
 }
 
-function powerOff() {
+function powerOff(device) {
     $.ajax({
         type: "GET",
-        url: getIP() + "/v1/relay/power/off",
+        url: getIP() + "/v2/relay/" + device + "/power/off",
         dataType: "json",
         success: function (result) {
-            showPowerStat(result);
+            showPowerStat(device, result);
         }
     });
 }
@@ -77,9 +77,12 @@ function powerOff() {
 function refreshAll() {
     refreshTemperature();
     refreshHumidity();
-    refreshPowerStatus();
+    refreshPowerStatus("lamp");
+    refreshPowerStatus("fan");
+    refreshPowerStatus("hum");
 }
 
 $(document).ready(function () {
+    $("#ip-input")[0].placeholder = pinkponyIp;
     refreshAll();
 });
