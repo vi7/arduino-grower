@@ -19,15 +19,15 @@ List of Arduino IDE libs
 **Hardware**
 
 - [Wemos D1 mini](https://wiki.wemos.cc/products:d1:d1_mini) or compatible clone
-- [DHT22 (AM2302) sensor](https://learn.adafruit.com/dht). See notes below
-- 230V relay switch
+- [DHT22 (AM2302) sensor](https://learn.adafruit.com/dht)
+- [Songle 230V relay switch](http://www.circuitbasics.com/wp-content/uploads/2015/11/5V-Relay-Pinout1.png)
+- [Omron 230V 2 channel solid state relay](https://hobbycomponents.com/2362-thickbox_default/5v-2-channel-240v-ac-solid-state-relay.jpg)
 
-# Setup
+## Setup
 
-DHT22 used in the project has been already shipped with PCB and pullup resistor. [Click](resources/dht22-am2302-temperature-humidity.jpeg) to see the picture. Thus should be connected to the `D0` pin of the D1 mini board (no pullup)
+Drawn by hand schematic is [here](./resources/arduino-grower-schematic-by-hand.jpg). It'll be eventually replaced by something more professional in the future.
 
-*Schematics TBD*
-
+---
 
 Plant nutrition
 ---------------
