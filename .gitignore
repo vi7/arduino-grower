@@ -1,9 +1,13 @@
-# SublimeText
-*.sublime-project
-*.sublime-workspace
+# vscode
+.vscode
 
 # macos
 .DS_Store
 
 # secrets
 secrets.h
+
+# PlatformIO
+.pio
+.pioenvs
+.piolibdeps
