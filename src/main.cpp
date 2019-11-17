@@ -1,11 +1,11 @@
 /*
- * temp-rh-pwr-control.ino
- * 
+ * main.cpp
+ *
  * !!! IMPORTANT !!! don't send more that 10 values per second to Blynk
- * 
+ *
  * Watering solution:
  * Amount of connected pumps: 1
- * Pump type: AD20P-1230C 
+ * Pump type: AD20P-1230C
  * Pump specs:
  *  - 12VDC
  *  - Hmax 300cm
@@ -17,10 +17,8 @@
 //#define BLYNK_PRINT Serial // Defines the object that is used for printing
 //#define BLYNK_DEBUG        // Optional, this enables more detailed prints
 
-#include <ESP8266WiFi.h>
-#include <BlynkSimpleEsp8266_SSL.h>
-#include <SimpleTimer.h>
-#include <DHTesp.h>
+#include "main.h"
+
 /*
  * include secrets and credentials
  * file should be created manually on a basis of "secrets.h.example"
@@ -95,7 +93,7 @@ WidgetLED blynkHumLed(BLYNK_HUMLEDPIN);
 /*     SETUP     */
 /*****************/
 void setup() {
-  
+
   // init Serial for logging and say Hi
   Serial.begin(115200);
   const String boardIdentity = ARDUINO_BOARD;
@@ -113,7 +111,7 @@ void setup() {
   // Blynk dependant functions
   timer.setTimeout(2000, initFanRelay);
   timer.setTimeout(2000, initHumRelay);
-  
+
   // schedule functions execution
   timer.setInterval(dhtReadInterval, tempRhDataHandler);
   timer.setInterval(WATER_INTERVAL, water);
@@ -129,10 +127,11 @@ void setup() {
 /*     LOOP     */
 /****************/
 void loop() {
-  
+
   Blynk.run();
   timer.run();
 
+  // TODO: move to a separate func or consider "`ESP8266WebServer.h`" usage
   WiFiClient client = server.available();
 
   if (client) {
@@ -151,8 +150,8 @@ void loop() {
                   } else {
                   currentLine = "";
                   }
-              } else if (c != '\r') { 
-              currentLine += c;    
+              } else if (c != '\r') {
+              currentLine += c;
               }
           }
       }
@@ -168,6 +167,7 @@ void loop() {
 /***************************/
 /*        FUNCTIONS        */
 /***************************/
+// TODO: consider "`ESP8266WebServer.h`" usage
 void sendResponse(WiFiClient client) {
   Serial.println("Sending response");
   client.println("HTTP/1.1 200 OK");
@@ -178,7 +178,7 @@ void sendResponse(WiFiClient client) {
 
   /*
    * APIv1 code
-   */ 
+   */
   if (request.indexOf("GET /v1/dht/temperature") >= 0) {
       client.println("{\"temperature\":\"" + String(temp, 1) +"\"}");
 
@@ -188,14 +188,14 @@ void sendResponse(WiFiClient client) {
   } else if (request.indexOf("GET /v1/relay/power/on") >= 0) {
       manualLampPowerOn();
       client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-      
+
   } else if (request.indexOf("GET /v1/relay/power/off") >= 0) {
       manualLampPowerOff();
       client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-     
+
   } else if (request.indexOf("GET /v1/relay/power/status") >= 0) {
       client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-  
+
   } else if (request.indexOf("GET /v1/lamp/status") >= 0) {
       client.println("{\"lamp\":\"" + String(isLampOn) +"\"}");
 
@@ -206,49 +206,49 @@ void sendResponse(WiFiClient client) {
 
   /*
    * APIv2 code
-   */ 
+   */
   } else if (request.indexOf("GET /v2/relay/lamp/power/on") >= 0) {
       manualLampPowerOn();
       client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-      
+
   } else if (request.indexOf("GET /v2/relay/lamp/power/off") >= 0) {
       manualLampPowerOff();
       client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-     
+
   } else if (request.indexOf("GET /v2/relay/lamp/power/status") >= 0) {
       client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
 
   } else if (request.indexOf("GET /v2/relay/fan/power/on") >= 0) {
       manualFanPower(true);
       client.println("{\"power\":\"" + String(isFanPowerOn) +"\"}");
-      
+
   } else if (request.indexOf("GET /v2/relay/fan/power/off") >= 0) {
       manualFanPower(false);
       client.println("{\"power\":\"" + String(isFanPowerOn) +"\"}");
-     
+
   } else if (request.indexOf("GET /v2/relay/fan/power/status") >= 0) {
       client.println("{\"power\":\"" + String(isFanPowerOn) +"\"}");
 
   } else if (request.indexOf("GET /v2/relay/hum/power/on") >= 0) {
       manualHumPower(true);
       client.println("{\"power\":\"" + String(isHumPowerOn) +"\"}");
-      
+
   } else if (request.indexOf("GET /v2/relay/hum/power/off") >= 0) {
       manualHumPower(false);
       client.println("{\"power\":\"" + String(isHumPowerOn) +"\"}");
-     
+
   } else if (request.indexOf("GET /v2/relay/hum/power/status") >= 0) {
       client.println("{\"power\":\"" + String(isHumPowerOn) +"\"}");
 
   }
-  
+
   client.println();
 }
 
 // function gets and uses temperature and relative humidity (RH) data
 void tempRhDataHandler() {
   getTempRh();
-  
+
   /************ LOGGING ************/
   // TODO: implement the ability to swith logging on and off
   Serial.print("DHT " + String(dht.getStatusString()));
@@ -259,7 +259,7 @@ void tempRhDataHandler() {
   Serial.print(F("RH: "));
   Serial.println(rH);
   /************  END LOGGING ************/
-  
+
   checkTemp();
   sendTempRhToBlynk();
 }
@@ -345,7 +345,7 @@ void initHumRelay() {
 void initPump() {
   pinMode(PUMPPIN, OUTPUT);
   digitalWrite(PUMPPIN, PUMP_OFF);
-  
+
   Blynk.virtualWrite(BLYNK_GRAPHPUMPPIN, 0);
 }
 
@@ -359,7 +359,7 @@ void initLamp() {
 /*     UTILITY FUNCTIONS     */
 /*****************************/
 /* TODO: refactor getTempRh() func to use TempAndHumidity struct
- * from the DHT lib instead of separate temp and RH vars 
+ * from the DHT lib instead of separate temp and RH vars
  */
 void getTempRh() {
   rH = dht.getHumidity();
@@ -394,7 +394,7 @@ void powerOff(bool yes) {
     digitalWrite(LAMPRELAYPIN, RELAY_ON);
     isLampPowerOn = true;
   }
-  
+
   Serial.println(F("Blynk: sending power status"));
   Blynk.virtualWrite(BLYNK_BUTTON1PIN, isLampPowerOn);
 }
@@ -436,7 +436,7 @@ void manualHumPower(bool enabled) {
 void pumpOn() {
   digitalWrite(PUMPPIN, PUMP_ON);
   Serial.println(F("Pump is on"));
-  
+
   Serial.println(F("Blynk: sending pump status"));
   Blynk.virtualWrite(BLYNK_GRAPHPUMPPIN, 1);
 }
@@ -455,9 +455,9 @@ void systemRestart() {
 }
 
 void sendTempRhToBlynk() {
-  
+
   Serial.println(F("Blynk: sending temperature and RH data"));
-  
+
   // send data to the LCD widget
   String tempStr = "Temp: " + String(temp, 1) + "℃";
   String rHStr = "RH: " + String(rH, 0) + "%";
@@ -472,11 +472,10 @@ void sendTempRhToBlynk() {
 void sendLampToBlynk(bool isOn, uint8_t brightness) {
 
   Serial.println(F("Blynk: sending lamp status"));
-  
+
   isOn ? blynkLampLed.on() : blynkLampLed.off();
   blynkLampBrLed.setValue(brightness);
 }
-
 
 /*****************/
 /*     BLYNK     */
@@ -490,6 +489,6 @@ BLYNK_WRITE(BLYNK_BUTTON1PIN) {
   if (buttonOn) {
       manualLampPowerOn();
     } else {
-      manualLampPowerOff();    
+      manualLampPowerOff();
     }
 }
