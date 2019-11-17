@@ -37,7 +37,6 @@
 #define BLYNK_LCDPIN V0
 #define BLYNK_GRAPHTEMPPIN V1
 #define BLYNK_GRAPHRHPIN V2
-#define BLYNK_BUTTON1PIN V3
 #define BLYNK_LAMPBRLEDPIN V4
 #define BLYNK_LAMPLEDPIN V5
 #define BLYNK_GRAPHPUMPPIN V6
@@ -102,15 +101,15 @@ void setup() {
   Serial.println("");
 
   initWiFi(WIFI_SSID, WIFI_PSK);
-  initLampRelay();
-  initDHT();
-  initPump();
-  initLamp();
   initBlynk();
+  initDHT();
+  initLamp();
 
   // Blynk dependant functions
-  timer.setTimeout(2000, initFanRelay);
-  timer.setTimeout(2000, initHumRelay);
+  timer.setTimeout(2000, initLampRelay);
+  timer.setTimeout(3000, initFanRelay);
+  timer.setTimeout(4000, initHumRelay);
+  timer.setTimeout(5000, initPump);
 
   // schedule functions execution
   timer.setInterval(dhtReadInterval, tempRhDataHandler);
@@ -281,7 +280,7 @@ void lampStatus() {
     Serial.println(F("LDR sensor: lamp is off"));
     isLampOn = false;
   }
-  sendLampToBlynk(isLampOn, ledBrightness);
+  sendLampToBlynk(ledBrightness);
 }
 
 // TODO: check if this really needed, assuming that Blynk connection still fails after WiFi issues
@@ -327,8 +326,7 @@ void initDHT() {
 
 void initLampRelay() {
   pinMode(LAMPRELAYPIN, OUTPUT);
-  digitalWrite(LAMPRELAYPIN, RELAY_ON);
-  isLampPowerOn = true;
+  isLampPowerOn = commonPower(LAMPRELAYPIN, true, &blynkLampLed);
   isLampAutoPowerOn = true;
 }
 
@@ -378,25 +376,11 @@ uint16_t getLightValue() {
 void checkTemp() {
   if (!isLampAutoPowerOn) return;
   if (temp >= MAX_TEMP && isLampPowerOn) {
-    powerOff(true);
+    commonPower(LAMPRELAYPIN, false, &blynkLampLed);
   }
   else if (temp < MAX_TEMP - TEMP_HYSTERESIS && !isLampPowerOn) {
-    powerOff(false);
+    commonPower(LAMPRELAYPIN, true, &blynkLampLed);
   }
-}
-
-// TODO: use commonPowerOff() func instead of this one for lamp power control
-void powerOff(bool yes) {
-  if (yes) {
-    digitalWrite(LAMPRELAYPIN, RELAY_OFF);
-    isLampPowerOn = false;
-  } else {
-    digitalWrite(LAMPRELAYPIN, RELAY_ON);
-    isLampPowerOn = true;
-  }
-
-  Serial.println(F("Blynk: sending power status"));
-  Blynk.virtualWrite(BLYNK_BUTTON1PIN, isLampPowerOn);
 }
 
 bool commonPower(uint8_t pin, bool enabled, WidgetLED *led) {
@@ -417,12 +401,12 @@ bool commonPower(uint8_t pin, bool enabled, WidgetLED *led) {
 
 void manualLampPowerOn() {
   isLampAutoPowerOn = true;
-  powerOff(false);
+  commonPower(LAMPRELAYPIN, true, &blynkLampLed);
 }
 
 void manualLampPowerOff() {
    isLampAutoPowerOn = false;
-   powerOff(true);
+   commonPower(LAMPRELAYPIN, false, &blynkLampLed);
 }
 
 void manualFanPower(bool enabled) {
@@ -469,26 +453,8 @@ void sendTempRhToBlynk() {
   Blynk.virtualWrite(BLYNK_GRAPHRHPIN, rH);
 }
 
-void sendLampToBlynk(bool isOn, uint8_t brightness) {
+void sendLampToBlynk(uint8_t brightness) {
 
-  Serial.println(F("Blynk: sending lamp status"));
-
-  isOn ? blynkLampLed.on() : blynkLampLed.off();
+  Serial.println(F("Blynk: sending lamp brightness"));
   blynkLampBrLed.setValue(brightness);
-}
-
-/*****************/
-/*     BLYNK     */
-/*****************/
-BLYNK_CONNECTED() {
-  Blynk.virtualWrite(BLYNK_BUTTON1PIN, isLampPowerOn);
-}
-
-BLYNK_WRITE(BLYNK_BUTTON1PIN) {
-  int buttonOn = param.asInt();
-  if (buttonOn) {
-      manualLampPowerOn();
-    } else {
-      manualLampPowerOff();
-    }
 }
