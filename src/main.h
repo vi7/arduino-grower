@@ -76,4 +76,4 @@ void systemRestart();
 
 void sendTempRhToBlynk();
 
-void sendLampToBlynk(bool isOn, uint8_t brightness);
+void sendLampToBlynk(uint8_t brightness);
