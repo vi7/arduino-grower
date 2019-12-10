@@ -12,6 +12,20 @@
 #include <BlynkSimpleEsp8266_SSL.h>
 #include <SimpleTimer.h>
 #include <DHTesp.h>
+#include <ezTime.h>
+
+#include "scheduler.h"
+#include "grower_version.h"
+
+typedef struct {
+  uint8_t sec;
+  uint8_t min;
+  uint8_t hr;
+  uint8_t day;
+  uint8_t mnth;
+  uint16_t year;
+  uint8_t intervalDays;
+} schedule;
 
 /***************************/
 /*        FUNCTIONS        */
@@ -33,6 +47,8 @@ void ensureBlynkConnection();
 void initWiFi(String SSID, String PSK);
 
 void initBlynk();
+
+void initEZT();
 
 void initDHT();
 

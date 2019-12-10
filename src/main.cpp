@@ -3,14 +3,6 @@
  *
  * !!! IMPORTANT !!! don't send more that 10 values per second to Blynk
  *
- * Watering solution:
- * Amount of connected pumps: 1
- * Pump type: AD20P-1230C
- * Pump specs:
- *  - 12VDC
- *  - Hmax 300cm
- *  - Qmax 240L/H(66ml/s)
- *  - Qreal 180L/H(50ml/s)
  */
 
 /* Comment this out to disable Blynk prints and save space: */
@@ -18,6 +10,7 @@
 //#define BLYNK_DEBUG        // Optional, this enables more detailed prints
 
 #include "main.h"
+#include "water_schedule.h"
 
 /*
  * include secrets and credentials
@@ -54,18 +47,14 @@
 const uint8_t MAX_TEMP = 40;
 const uint8_t TEMP_HYSTERESIS = 10;
 
-/* watering constants */
-// water each 4 days - time in milliseconds
-const uint32_t WATER_INTERVAL = 4L * 24L * 60L * 60L * 1000L;
-// est water amount: 300ml - time in seconds
-const uint8_t WATER_DURATION = 6;
-
 /* light monitoring constants */
 // lamp check interval in seconds
 const uint8_t LIGHT_CHECK_INTERVAL = 1;
 // LDR sensor values. The lower value is the brighter is light.
 const uint8_t LAMP_ON_VALUE = 200;
 const uint16_t LAMP_OFF_VALUE = 900;
+
+const String location = "Europe/Amsterdam";
 
 SimpleTimer timer;
 DHTesp dht;
@@ -76,6 +65,8 @@ String request;
 bool isLampPowerOn, isLampAutoPowerOn, isLampOn;
 bool isFanPowerOn;
 bool isHumPowerOn;
+Timezone LocalTZ;
+Scheduler waterScheduler(water, WATER_SCHEDULE.sec, WATER_SCHEDULE.min, WATER_SCHEDULE.hr, WATER_SCHEDULE.day, WATER_SCHEDULE.mnth, WATER_SCHEDULE.year, WATER_SCHEDULE.intervalDays, &LocalTZ);
 
 /* Blynk stuff */
 // blynk connection check interval in seconds
@@ -95,27 +86,37 @@ void setup() {
 
   // init Serial for logging and say Hi
   Serial.begin(115200);
-  const String boardIdentity = ARDUINO_BOARD;
-  Serial.print("\n\n" + boardIdentity);
+  const char BOARD_IDENTITY[] = ARDUINO_BOARD;
+  Serial.println(F("\n\n************"));
+  Serial.printf("%s", BOARD_IDENTITY);
   Serial.println(F(" is up. Hey there!"));
-  Serial.println("");
+  Serial.printf("Firmware version: %s\n", GROWER_VERSION);
+  Serial.println(F("************\n\n"));
 
   initWiFi(WIFI_SSID, WIFI_PSK);
+  initEZT();
   initBlynk();
   initDHT();
   initLamp();
 
-  // Blynk dependant functions
+  // delay Blynk dependant init functions
   timer.setTimeout(2000, initLampRelay);
   timer.setTimeout(3000, initFanRelay);
   timer.setTimeout(4000, initHumRelay);
   timer.setTimeout(5000, initPump);
 
-  // schedule functions execution
+  /* SimpleTimer function execution scheduling */
   timer.setInterval(dhtReadInterval, tempRhDataHandler);
-  timer.setInterval(WATER_INTERVAL, water);
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, lampStatus);
   timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, ensureBlynkConnection);
+
+  /* ezTime function execution scheduling */
+  LocalTZ.setEvent(waterScheduler.function, waterScheduler.getNextUnixTime());
+  // TODO: candidate for debug logging
+  // Serial.print(F("[MAIN] [D] Requested watering start time: "));
+  // Serial.println(waterScheduler.getStartDateTime());
+  // Serial.print(F("[MAIN] [D] Next watering scheduled on: "));
+  // Serial.println(waterScheduler.getNextDateTime());
 
   server.begin();
 
@@ -129,6 +130,7 @@ void loop() {
 
   Blynk.run();
   timer.run();
+  ezt::events();
 
   // TODO: move to a separate func or consider "`ESP8266WebServer.h`" usage
   WiFiClient client = server.available();
@@ -239,6 +241,18 @@ void sendResponse(WiFiClient client) {
   } else if (request.indexOf("GET /v2/relay/hum/power/status") >= 0) {
       client.println("{\"power\":\"" + String(isHumPowerOn) +"\"}");
 
+  } else if (request.indexOf("GET /v2/water/schedule/start") >= 0) {
+      client.println("{\"date_time\":\"" + waterScheduler.getStartDateTime(ISO8601) +"\"}");
+
+  } else if (request.indexOf("GET /v2/water/schedule/next") >= 0) {
+      client.println("{\"date_time\":\"" + waterScheduler.getNextDateTime(ISO8601) +"\"}");
+
+  } else if (request.indexOf("GET /v2/water/schedule/interval") >= 0) {
+      client.println("{\"days\":\"" + String(WATER_SCHEDULE.intervalDays) +"\"}");
+
+  } else if (request.indexOf("GET /v2/water/schedule/duration") >= 0) {
+      client.println("{\"duration\":\"" + String(WATER_DURATION) +"\"}");
+
   }
 
   client.println();
@@ -249,14 +263,14 @@ void tempRhDataHandler() {
   getTempRh();
 
   /************ LOGGING ************/
-  // TODO: implement the ability to swith logging on and off
-  Serial.print("DHT " + String(dht.getStatusString()));
-  Serial.print(F("\t"));
-  Serial.print(F("temperature: "));
-  Serial.print(temp);
-  Serial.print(F("\t\t"));
-  Serial.print(F("RH: "));
-  Serial.println(rH);
+  // TODO: candidate for debug logging
+  // Serial.print("DHT " + String(dht.getStatusString()));
+  // Serial.print(F("\t"));
+  // Serial.print(F("temperature: "));
+  // Serial.print(temp);
+  // Serial.print(F("\t\t"));
+  // Serial.print(F("RH: "));
+  // Serial.println(rH);
   /************  END LOGGING ************/
 
   checkTemp();
@@ -266,13 +280,18 @@ void tempRhDataHandler() {
 void water() {
   pumpOn();
   timer.setTimeout(WATER_DURATION * 1000, pumpOff);
+  LocalTZ.setEvent(waterScheduler.function, waterScheduler.getNextUnixTime());
+  // TODO: candidate for debug logging
+  // Serial.print(F("[MAIN] [DEBUG] Next watering re-scheduled on: "));
+  // Serial.println(waterScheduler.getNextDateTime());
 }
 
 //  TODO: refactor this function to be similar to tempRhDataHandler()
 void lampStatus() {
   uint16_t lightVal = getLightValue();
   uint8_t ledBrightness = map(lightVal, 0, 1023, 255, 0);
-  Serial.println("LDR sensor: " + String(lightVal));
+  // TODO: candidate for debug logging
+  // Serial.println("LDR sensor: " + String(lightVal));
   if (lightVal < LAMP_ON_VALUE && !isLampOn) {
     Serial.println(F("LDR sensor: lamp is on"));
     isLampOn = true;
@@ -286,8 +305,11 @@ void lampStatus() {
 // TODO: check if this really needed, assuming that Blynk connection still fails after WiFi issues
 void ensureBlynkConnection() {
   if (Blynk.connected()) {
-    Serial.println(F("Blynk watchdog: connected to the server"));
+    // TODO: candidate for debug logging
+    // Serial.println(F("Blynk watchdog: connected to the server"));
+    return;
   } else {
+    // TODO: candidate for error logging
     Serial.println(F("Blynk watchdog: connection to the server FAILED! Reconnecting..."));
     Blynk.disconnect();
     Blynk.connect(BLYNK_CHECK_INTERVAL);
@@ -315,6 +337,20 @@ void initWiFi(String SSID, String PSK) {
 
 void initBlynk() {
   Blynk.config(BLYNK_AUTH);
+}
+
+void initEZT() {
+  // ezTime logging level, one of: NONE, ERROR, INFO, DEBUG
+  ezt::setDebug(NONE);
+  ezt::waitForSync();
+
+  if (LocalTZ.setCache(0)) {
+    Serial.println(F("Using cached timezone info"));
+  } else {
+    Serial.println(F("Timezone info not found in cache, fetching it"));
+    LocalTZ.setLocation(location);
+  }
+	Serial.println(location + " time: " + LocalTZ.dateTime());
 }
 
 void initDHT() {
@@ -376,10 +412,10 @@ uint16_t getLightValue() {
 void checkTemp() {
   if (!isLampAutoPowerOn) return;
   if (temp >= MAX_TEMP && isLampPowerOn) {
-    commonPower(LAMPRELAYPIN, false, &blynkLampLed);
+    isLampPowerOn = commonPower(LAMPRELAYPIN, false, &blynkLampLed);
   }
   else if (temp < MAX_TEMP - TEMP_HYSTERESIS && !isLampPowerOn) {
-    commonPower(LAMPRELAYPIN, true, &blynkLampLed);
+    isLampPowerOn = commonPower(LAMPRELAYPIN, true, &blynkLampLed);
   }
 }
 
@@ -401,12 +437,12 @@ bool commonPower(uint8_t pin, bool enabled, WidgetLED *led) {
 
 void manualLampPowerOn() {
   isLampAutoPowerOn = true;
-  commonPower(LAMPRELAYPIN, true, &blynkLampLed);
+  isLampPowerOn = commonPower(LAMPRELAYPIN, true, &blynkLampLed);
 }
 
 void manualLampPowerOff() {
    isLampAutoPowerOn = false;
-   commonPower(LAMPRELAYPIN, false, &blynkLampLed);
+   isLampPowerOn = commonPower(LAMPRELAYPIN, false, &blynkLampLed);
 }
 
 void manualFanPower(bool enabled) {
@@ -419,7 +455,7 @@ void manualHumPower(bool enabled) {
 
 void pumpOn() {
   digitalWrite(PUMPPIN, PUMP_ON);
-  Serial.println(F("Pump is on"));
+  Serial.println(F("[MAIN] [I] Pump is on"));
 
   Serial.println(F("Blynk: sending pump status"));
   Blynk.virtualWrite(BLYNK_GRAPHPUMPPIN, 1);
@@ -427,7 +463,7 @@ void pumpOn() {
 
 void pumpOff() {
   digitalWrite(PUMPPIN, PUMP_OFF);
-  Serial.println(F("Pump is off"));
+  Serial.println(F("[MAIN] [I] Pump is off"));
 
   Serial.println(F("Blynk: sending pump status"));
   Blynk.virtualWrite(BLYNK_GRAPHPUMPPIN, 0);
@@ -440,7 +476,8 @@ void systemRestart() {
 
 void sendTempRhToBlynk() {
 
-  Serial.println(F("Blynk: sending temperature and RH data"));
+  // TODO: candidate for debug logging
+  // Serial.println(F("Blynk: sending temperature and RH data"));
 
   // send data to the LCD widget
   String tempStr = "Temp: " + String(temp, 1) + "℃";
@@ -455,6 +492,7 @@ void sendTempRhToBlynk() {
 
 void sendLampToBlynk(uint8_t brightness) {
 
-  Serial.println(F("Blynk: sending lamp brightness"));
+  // TODO: candidate for debug logging
+  // Serial.println(F("Blynk: sending lamp brightness"));
   blynkLampBrLed.setValue(brightness);
 }

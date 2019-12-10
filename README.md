@@ -9,10 +9,7 @@ Wemos D1 mini based remote controller/monitor
 
 IDE: VSCode + [PlatformIO](http://platformio.org) IDE extension
 
-- [ESP8266 board support](https://github.com/esp8266/Arduino#installing-with-boards-manager)
-- [DHT sensor library for ESPx](https://github.com/beegee-tokyo/DHTesp)
-- [Blynk lib](https://github.com/blynkkk/blynk-library/releases) for integration with [Blynk IoT](https://blynk.io)
-- [SimpleTimer lib](https://github.com/schinken/SimpleTimer)
+Dependency libs are listed in the [platformio.ini](platformio.ini)
 
 **Hardware**
 
