@@ -69,16 +69,11 @@ void getTempRh();
 
 uint16_t getLightValue();
 
-// function performs actions when temperature exceeds MAX_TEMP limit
-void checkTemp();
-
-void powerOff(bool yes);
+void autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin, WidgetLED *led);
 
 bool commonPower(uint8_t pin, bool enabled, WidgetLED *led);
 
-void manualLampPowerOn();
-
-void manualLampPowerOff();
+void manualLampPower(bool enabled);
 
 void manualFanPower(bool enabled);
 
