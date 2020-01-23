@@ -43,11 +43,11 @@
 #define PUMP_ON HIGH
 #define PUMP_OFF LOW
 
-/* temperature monitoring constants */
+/* monitoring constants */
 const uint8_t MAX_TEMP = 40;
 const uint8_t TEMP_HYSTERESIS = 10;
-
-/* light monitoring constants */
+const uint8_t MAX_RH = 60;
+const uint8_t RH_HYSTERESIS = 10;
 // lamp check interval in seconds
 const uint8_t LIGHT_CHECK_INTERVAL = 1;
 // LDR sensor values. The lower value is the brighter is light.
@@ -64,7 +64,7 @@ WiFiServer server(80);
 String request;
 bool isLampPowerOn, isLampAutoPowerOn, isLampOn;
 bool isFanPowerOn;
-bool isHumPowerOn;
+bool isHumPowerOn, isHumAutoPowerOn;
 Timezone LocalTZ;
 Scheduler waterScheduler(water, WATER_SCHEDULE.sec, WATER_SCHEDULE.min, WATER_SCHEDULE.hr, WATER_SCHEDULE.day, WATER_SCHEDULE.mnth, WATER_SCHEDULE.year, WATER_SCHEDULE.intervalDays, &LocalTZ);
 
@@ -187,11 +187,11 @@ void sendResponse(WiFiClient client) {
       client.println("{\"humidity\":\"" + String(rH, 0) +"\"}");
 
   } else if (request.indexOf("GET /v1/relay/power/on") >= 0) {
-      manualLampPowerOn();
+      manualLampPower(true);
       client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
 
   } else if (request.indexOf("GET /v1/relay/power/off") >= 0) {
-      manualLampPowerOff();
+      manualLampPower(false);
       client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
 
   } else if (request.indexOf("GET /v1/relay/power/status") >= 0) {
@@ -209,11 +209,11 @@ void sendResponse(WiFiClient client) {
    * APIv2 code
    */
   } else if (request.indexOf("GET /v2/relay/lamp/power/on") >= 0) {
-      manualLampPowerOn();
+      manualLampPower(true);
       client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
 
   } else if (request.indexOf("GET /v2/relay/lamp/power/off") >= 0) {
-      manualLampPowerOff();
+      manualLampPower(false);
       client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
 
   } else if (request.indexOf("GET /v2/relay/lamp/power/status") >= 0) {
@@ -273,7 +273,12 @@ void tempRhDataHandler() {
   // Serial.println(rH);
   /************  END LOGGING ************/
 
-  checkTemp();
+  // automatic temperature monitoring
+  autoPower(&isLampAutoPowerOn, &isLampPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, LAMPRELAYPIN, &blynkLampLed);
+
+  // automatic relative humidity monitoring
+  autoPower(&isHumAutoPowerOn, &isHumPowerOn, &rH, MAX_RH, RH_HYSTERESIS, HUMRELAYPIN, &blynkHumLed);
+
   sendTempRhToBlynk();
 }
 
@@ -374,6 +379,7 @@ void initFanRelay() {
 void initHumRelay() {
   pinMode(HUMRELAYPIN, OUTPUT);
   isHumPowerOn = commonPower(HUMRELAYPIN, true, &blynkHumLed);
+  isHumAutoPowerOn = true;
 }
 
 void initPump() {
@@ -408,14 +414,13 @@ uint16_t getLightValue() {
   return analogRead(LDRPIN);
 }
 
-// function performs actions when temperature exceeds MAX_TEMP limit
-void checkTemp() {
-  if (!isLampAutoPowerOn) return;
-  if (temp >= MAX_TEMP && isLampPowerOn) {
-    isLampPowerOn = commonPower(LAMPRELAYPIN, false, &blynkLampLed);
+void autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin, WidgetLED *led) {
+  if (!*autoControl) return;
+  if (*currVal >= maxVal && *isOn) {
+    *isOn = commonPower(pin, false, led);
   }
-  else if (temp < MAX_TEMP - TEMP_HYSTERESIS && !isLampPowerOn) {
-    isLampPowerOn = commonPower(LAMPRELAYPIN, true, &blynkLampLed);
+  else if (*currVal < maxVal - valHyst && !*isOn) {
+    *isOn = commonPower(pin, true, led);
   }
 }
 
@@ -435,14 +440,9 @@ bool commonPower(uint8_t pin, bool enabled, WidgetLED *led) {
   return isOn;
 }
 
-void manualLampPowerOn() {
-  isLampAutoPowerOn = true;
-  isLampPowerOn = commonPower(LAMPRELAYPIN, true, &blynkLampLed);
-}
-
-void manualLampPowerOff() {
-   isLampAutoPowerOn = false;
-   isLampPowerOn = commonPower(LAMPRELAYPIN, false, &blynkLampLed);
+void manualLampPower(bool enabled) {
+  isLampAutoPowerOn = enabled;
+  isLampPowerOn = commonPower(LAMPRELAYPIN, enabled, &blynkLampLed);
 }
 
 void manualFanPower(bool enabled) {
@@ -450,6 +450,7 @@ void manualFanPower(bool enabled) {
 }
 
 void manualHumPower(bool enabled) {
+  isHumAutoPowerOn = enabled;
   isHumPowerOn = commonPower(HUMRELAYPIN, enabled, &blynkHumLed);
 }
 
