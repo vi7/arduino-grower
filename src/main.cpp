@@ -11,6 +11,7 @@
 
 #include "main.h"
 #include "water_schedule.h"
+#include "lamp_schedule.h"
 
 /*
  * include secrets and credentials
@@ -57,8 +58,6 @@ const uint8_t LIGHT_CHECK_INTERVAL = 1;
 const uint8_t LAMP_ON_VALUE = 200;
 const uint16_t LAMP_OFF_VALUE = 900;
 
-const String location = "Europe/Amsterdam";
-
 SimpleTimer timer;
 DHTesp dht;
 float temp, rH;
@@ -68,8 +67,9 @@ String request;
 bool isLampPowerOn, isLampAutoPowerOn, isLampOn;
 bool isFanPowerOn;
 bool isHumPowerOn, isHumAutoPowerOn;
-Timezone LocalTZ;
-Scheduler waterScheduler(water, WATER_SCHEDULE.sec, WATER_SCHEDULE.min, WATER_SCHEDULE.hr, WATER_SCHEDULE.day, WATER_SCHEDULE.mnth, WATER_SCHEDULE.year, WATER_SCHEDULE.intervalDays, &LocalTZ);
+Scheduler waterScheduler;
+Scheduler lampOnScheduler;
+Scheduler lampOffScheduler;
 
 /* Blynk stuff */
 // blynk connection check interval in seconds
@@ -97,7 +97,6 @@ void setup() {
   Serial.println(F("************\n\n"));
 
   initWiFi(WIFI_SSID, WIFI_PSK);
-  initEZT();
   initBlynk();
   initDHT();
   initLamp();
@@ -113,8 +112,10 @@ void setup() {
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, lampStatus);
   timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, ensureBlynkConnection);
 
-  /* ezTime function execution scheduling */
-  LocalTZ.setEvent(waterScheduler.function, waterScheduler.getNextUnixTime());
+  waterScheduler.init(water, WATER_SCHEDULE);
+  lampOnScheduler.init(scheduledLampPowerOn, LAMP_ON_SCHEDULE);
+  lampOffScheduler.init(scheduledLampPowerOff, LAMP_OFF_SCHEDULE);
+
   // TODO: candidate for debug logging
   // Serial.print(F("[MAIN] [D] Requested watering start time: "));
   // Serial.println(waterScheduler.getStartDateTime());
@@ -288,10 +289,7 @@ void tempRhDataHandler() {
 void water() {
   pumpOn();
   timer.setTimeout(WATER_DURATION * 1000, pumpOff);
-  LocalTZ.setEvent(waterScheduler.function, waterScheduler.getNextUnixTime());
-  // TODO: candidate for debug logging
-  // Serial.print(F("[MAIN] [DEBUG] Next watering re-scheduled on: "));
-  // Serial.println(waterScheduler.getNextDateTime());
+  waterScheduler.setNextEvent();
 }
 
 //  TODO: refactor this function to be similar to tempRhDataHandler()
@@ -345,20 +343,6 @@ void initWiFi(String SSID, String PSK) {
 
 void initBlynk() {
   Blynk.config(BLYNK_AUTH);
-}
-
-void initEZT() {
-  // ezTime logging level, one of: NONE, ERROR, INFO, DEBUG
-  ezt::setDebug(NONE);
-  ezt::waitForSync();
-
-  if (LocalTZ.setCache(0)) {
-    Serial.println(F("Using cached timezone info"));
-  } else {
-    Serial.println(F("Timezone info not found in cache, fetching it"));
-    LocalTZ.setLocation(location);
-  }
-	Serial.println(location + " time: " + LocalTZ.dateTime());
 }
 
 void initDHT() {
@@ -455,6 +439,16 @@ void manualFanPower(bool enabled) {
 void manualHumPower(bool enabled) {
   isHumAutoPowerOn = enabled;
   isHumPowerOn = commonPower(HUMRELAYPIN, enabled, &blynkHumLed);
+}
+
+void scheduledLampPowerOn() {
+  manualLampPower(true);
+  lampOnScheduler.setNextEvent();
+}
+
+void scheduledLampPowerOff() {
+  manualLampPower(false);
+  lampOffScheduler.setNextEvent();
 }
 
 void pumpOn() {
