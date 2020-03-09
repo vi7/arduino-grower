@@ -4,27 +4,24 @@
 
 #include "scheduler.h"
 
-Scheduler::Scheduler(
-    void (*function)(),
-    uint8_t startSec,
-    uint8_t startMin,
-    uint8_t startHr,
-    uint8_t startDay,
-    uint8_t startMnth,
-    uint16_t startYear,
-    uint8_t intervalDays,
-    Timezone *tz
-    ) :
-      function(function),
-      startSec(startSec),
-      startMin(startMin),
-      startHr(startHr),
-      startDay(startDay),
-      startMnth(startMnth),
-      startYear(startYear),
-      intervalDays(intervalDays),
-      _tz(tz)
-    {};
+Scheduler::Scheduler() {
+};
+
+void Scheduler::init(void (*function)(), schedule schedule, String *location) {
+  this->function = function;
+
+  startSec = schedule.sec;
+  startMin = schedule.min;
+  startHr = schedule.hr;
+  startDay = schedule.day;
+  startMnth = schedule.mnth;
+  startYear = schedule.year;
+  intervalDays = schedule.intervalDays;
+
+  this->_tz = new Timezone();
+  initTimezone(location);
+  setNextEvent();
+}
 
 time_t Scheduler::getStartUnixTime() {
   return makeTime(startHr, startMin, startSec, startDay, startMnth, startYear);
@@ -49,4 +46,24 @@ String Scheduler::getStartDateTime(const String format) {
 
 String Scheduler::getNextDateTime(const String format) {
   return _tz->dateTime(getNextUnixTime(), format);
+}
+
+void Scheduler::initTimezone(String *location) {
+  // ezTime logging level, one of: NONE, ERROR, INFO, DEBUG
+  ezt::setDebug(NONE);
+  ezt::waitForSync();
+
+  if (_tz->setCache(0)) {
+    // TODO add check if location has been changed
+    Serial.println(F("Using cached timezone info"));
+  } else {
+    Serial.println(F("Timezone info not found in cache, fetching it"));
+    _tz->setLocation(*location);
+  }
+  // TODO extract method for current time logging and remove from scheduler init
+	Serial.println(*location + " time: " + _tz->dateTime());
+}
+
+void Scheduler::setNextEvent() {
+    _tz->setEvent(function, getNextUnixTime());
 }

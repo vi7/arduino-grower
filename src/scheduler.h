@@ -5,8 +5,20 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
+#define DEFAULT_LOCATION "Europe/Amsterdam"
+
 #include <Arduino.h>
 #include <ezTime.h>
+
+typedef struct {
+  uint8_t sec;
+  uint8_t min;
+  uint8_t hr;
+  uint8_t day;
+  uint8_t mnth;
+  uint16_t year;
+  uint8_t intervalDays;
+} schedule;
 
 class Scheduler {
 public:
@@ -15,28 +27,9 @@ public:
   uint16_t startYear;
   uint8_t intervalDays;
 
-  Scheduler(
-    void (*function)(),
-    uint8_t startSec,
-    uint8_t startMin,
-    uint8_t startHr,
-    uint8_t startDay,
-    uint8_t startMnth,
-    uint16_t startYear,
-    uint8_t intervalDays,
-    Timezone *tz
-    );
+  Scheduler();
 
-  Scheduler(
-    void (*function)(),
-    uint8_t startHr,
-    uint8_t startDay,
-    uint8_t startMnth,
-    uint16_t startYear,
-    uint8_t intervalDays,
-    Timezone *tz
-    ) :
-      Scheduler(function, 0, 0, startHr, startDay, startMnth, startYear, intervalDays, tz) {};
+  void init(void (*function)(), schedule, String* = new String(DEFAULT_LOCATION));
 
   time_t getStartUnixTime();
   time_t getNextUnixTime();
@@ -47,6 +40,9 @@ public:
    */
   String getStartDateTime(const String format = DEFAULT_TIMEFORMAT);
   String getNextDateTime(const String format = DEFAULT_TIMEFORMAT);
+
+  void initTimezone(String*);
+  void setNextEvent();
 
 private:
   Timezone *_tz;
