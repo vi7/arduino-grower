@@ -1,5 +1,5 @@
 /*
-* 
+*
 * lamp_schedule.h
 *
 * Defines constants for scheduling lamp turning on and off
@@ -24,7 +24,7 @@ const schedule LAMP_ON_SCHEDULE = {
 const schedule LAMP_OFF_SCHEDULE = {
   0,    // sec
   0,    // min
-  14,   // hour
+  12,   // hour
   8,    // day
   3,    // month
   2020, // year
