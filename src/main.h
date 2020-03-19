@@ -70,6 +70,14 @@ void scheduledLampPowerOn();
 
 void scheduledLampPowerOff();
 
+void scheduledFanPowerOn();
+
+void scheduledFanPowerOff();
+
+void scheduledHumPowerOn();
+
+void scheduledHumPowerOff();
+
 void pumpOn();
 
 void pumpOff();

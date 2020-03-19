@@ -10,8 +10,7 @@
 //#define BLYNK_DEBUG        // Optional, this enables more detailed prints
 
 #include "main.h"
-#include "water_schedule.h"
-#include "lamp_schedule.h"
+#include "schedules.h"
 
 /*
  * include secrets and credentials
@@ -70,6 +69,10 @@ bool isHumPowerOn, isHumAutoPowerOn;
 Scheduler waterScheduler;
 Scheduler lampOnScheduler;
 Scheduler lampOffScheduler;
+Scheduler fanOnScheduler;
+Scheduler fanOffScheduler;
+Scheduler humOnScheduler;
+Scheduler humOffScheduler;
 
 /* Blynk stuff */
 // blynk connection check interval in seconds
@@ -112,9 +115,14 @@ void setup() {
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, lampStatus);
   timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, ensureBlynkConnection);
 
+// TODO add possibility to pass function with parameters
   waterScheduler.init(water, WATER_SCHEDULE);
   lampOnScheduler.init(scheduledLampPowerOn, LAMP_ON_SCHEDULE);
   lampOffScheduler.init(scheduledLampPowerOff, LAMP_OFF_SCHEDULE);
+  fanOnScheduler.init(scheduledFanPowerOn, FAN_ON_SCHEDULE);
+  fanOffScheduler.init(scheduledFanPowerOff, FAN_OFF_SCHEDULE);
+  humOnScheduler.init(scheduledHumPowerOn, HUM_ON_SCHEDULE);
+  humOffScheduler.init(scheduledHumPowerOff, HUM_OFF_SCHEDULE);
 
   // TODO: candidate for debug logging
   // Serial.print(F("[MAIN] [D] Requested watering start time: "));
@@ -449,6 +457,26 @@ void scheduledLampPowerOn() {
 void scheduledLampPowerOff() {
   manualLampPower(false);
   lampOffScheduler.setNextEvent();
+}
+
+void scheduledFanPowerOn() {
+  manualFanPower(true);
+  fanOnScheduler.setNextEvent();
+}
+
+void scheduledFanPowerOff() {
+  manualFanPower(false);
+  fanOffScheduler.setNextEvent();
+}
+
+void scheduledHumPowerOn() {
+  manualHumPower(true);
+  humOnScheduler.setNextEvent();
+}
+
+void scheduledHumPowerOff() {
+  manualHumPower(false);
+  humOffScheduler.setNextEvent();
 }
 
 void pumpOn() {
