@@ -53,13 +53,11 @@ void Scheduler::initTimezone(String *location) {
   ezt::setDebug(NONE);
   ezt::waitForSync();
 
-  if (_tz->setCache(0)) {
-    // TODO add check if location has been changed
-    Serial.println(F("Using cached timezone info"));
-  } else {
+  if (!_tz->setCache(0) && _tz->getOlson() != *location) {
     Serial.println(F("Timezone info not found in cache, fetching it"));
     _tz->setLocation(*location);
   }
+  
   // TODO extract method for current time logging and remove from scheduler init
 	Serial.println(*location + " time: " + _tz->dateTime());
 }
