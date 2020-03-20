@@ -20,7 +20,9 @@
 /***************************/
 /*        FUNCTIONS        */
 /***************************/
-void sendResponse(WiFiClient client);
+void initServer();
+
+void sendReply(const String& content);
 
 // function gets and uses temperature and relative humidity (RH) data
 void tempRhDataHandler();
