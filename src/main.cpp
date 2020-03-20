@@ -190,36 +190,14 @@ void sendResponse(WiFiClient client) {
   client.println();
 
   /*
-   * APIv1 code
-   */
-  if (request.indexOf("GET /v1/dht/temperature") >= 0) {
-      client.println("{\"temperature\":\"" + String(temp, 1) +"\"}");
-
-  } else if (request.indexOf("GET /v1/dht/humidity") >= 0) {
-      client.println("{\"humidity\":\"" + String(rH, 0) +"\"}");
-
-  } else if (request.indexOf("GET /v1/relay/power/on") >= 0) {
-      manualLampPower(true);
-      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-
-  } else if (request.indexOf("GET /v1/relay/power/off") >= 0) {
-      manualLampPower(false);
-      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-
-  } else if (request.indexOf("GET /v1/relay/power/status") >= 0) {
-      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-
-  } else if (request.indexOf("GET /v1/lamp/status") >= 0) {
-      client.println("{\"lamp\":\"" + String(isLampOn) +"\"}");
-
-  } else if (request.indexOf("GET /v1/system/restart") >= 0) {
-      client.println("{\"restart\":\"OK\"}");
-      delay(500);
-      systemRestart();
-
-  /*
    * APIv2 code
    */
+ if (request.indexOf("GET /v2/dht/temperature") >= 0) {
+      client.println("{\"temperature\":\"" + String(temp, 1) +"\"}");
+
+  } else if (request.indexOf("GET /v2/dht/humidity") >= 0) {
+      client.println("{\"humidity\":\"" + String(rH, 0) +"\"}");
+
   } else if (request.indexOf("GET /v2/relay/lamp/power/on") >= 0) {
       manualLampPower(true);
       client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");

@@ -10,7 +10,7 @@ function getIP() {
 function refreshTemperature() {
     $.ajax({
         type: "GET",
-        url: getIP() + "/v1/dht/temperature",
+        url: getIP() + "/v2/dht/temperature",
         dataType: "json",
         success: function (result) {
             $("#temperature")[0].innerHTML = result.temperature + "°";
@@ -21,7 +21,7 @@ function refreshTemperature() {
 function refreshHumidity() {
     $.ajax({
         type: "GET",
-        url: getIP() + "/v1/dht/humidity",
+        url: getIP() + "/v2/dht/humidity",
         dataType: "json",
         success: function (result) {
             $("#humidity")[0].innerHTML = result.humidity + "%";
