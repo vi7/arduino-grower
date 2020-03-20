@@ -36,9 +36,9 @@
 #define BLYNK_FANLEDPIN V7
 #define BLYNK_HUMLEDPIN V8
 
-/* normally closed (NC) relay NC defines */
-#define RELAY_ON LOW
-#define RELAY_OFF HIGH
+// /* normally closed (NC) relay NC defines */
+// #define RELAY_ON LOW
+// #define RELAY_OFF HIGH
 
 #define PUMP_ON HIGH
 #define PUMP_OFF LOW
@@ -116,7 +116,12 @@ void setup() {
   timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, ensureBlynkConnection);
 
   waterScheduler.init(water, WATER_SCHEDULE);
-  lampOnScheduler.init(scheduledLampPowerOn, LAMP_ON_SCHEDULE);
+
+  // TODO try anon functions
+  lampOnScheduler.init([]{
+        PowerManager::manualPower(true, LAMPRELAYPIN, &blynkLampLed, &isLampAutoPowerOn, &isLampPowerOn);
+        lampOnScheduler.setNextEvent();
+        }, LAMP_ON_SCHEDULE);
   lampOffScheduler.init(scheduledLampPowerOff, LAMP_OFF_SCHEDULE);
   fanOnScheduler.init(scheduledFanPowerOn, FAN_ON_SCHEDULE);
   fanOffScheduler.init(scheduledFanPowerOff, FAN_OFF_SCHEDULE);
@@ -160,12 +165,12 @@ void initServer() {
   });
 
   server.on("/v2/relay/lamp/power/on", []{
-      manualLampPower(true);
+      PowerManager::manualPower(true, LAMPRELAYPIN, &blynkLampLed, &isLampAutoPowerOn, &isLampPowerOn);
       sendReply("{\"power\":\"" + String(isLampPowerOn) +"\"}");
   });
 
   server.on("/v2/relay/lamp/power/off", []{
-      manualLampPower(false);
+      PowerManager::manualPower(false, LAMPRELAYPIN, &blynkLampLed, &isLampAutoPowerOn, &isLampPowerOn);
       sendReply("{\"power\":\"" + String(isLampPowerOn) +"\"}");
   });
 
@@ -174,12 +179,12 @@ void initServer() {
   });
 
   server.on("/v2/relay/fan/power/on", [] {
-      manualFanPower(true);
+      PowerManager::manualPower(true, FANRELAYPIN, &blynkFanLed, false, &isFanPowerOn);
       sendReply("{\"power\":\"" + String(isFanPowerOn) +"\"}");
   });
 
   server.on("/v2/relay/fan/power/off", [] {
-      manualFanPower(false);
+      PowerManager::manualPower(false, FANRELAYPIN, &blynkFanLed, false, &isFanPowerOn);
       sendReply("{\"power\":\"" + String(isFanPowerOn) +"\"}");
   });
 
@@ -188,12 +193,12 @@ void initServer() {
   });
 
   server.on("/v2/relay/hum/power/on", [] {
-      manualHumPower(true);
+      PowerManager::manualPower(true, HUMRELAYPIN, &blynkHumLed, &isHumAutoPowerOn, &isHumPowerOn);
       sendReply("{\"power\":\"" + String(isHumPowerOn) +"\"}");
   });
 
   server.on("/v2/relay/hum/power/off", [] {
-      manualHumPower(false);
+      PowerManager::manualPower(false, HUMRELAYPIN, &blynkHumLed, &isHumAutoPowerOn, &isHumPowerOn);
       sendReply("{\"power\":\"" + String(isHumPowerOn) +"\"}");
   });
 
@@ -239,10 +244,10 @@ void tempRhDataHandler() {
   /************  END LOGGING ************/
 
   // automatic temperature monitoring
-  autoPower(&isLampAutoPowerOn, &isLampPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, LAMPRELAYPIN, &blynkLampLed);
+  PowerManager::autoPower(&isLampAutoPowerOn, &isLampPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, LAMPRELAYPIN, &blynkLampLed);
 
   // automatic relative humidity monitoring
-  autoPower(&isHumAutoPowerOn, &isHumPowerOn, &rH, MAX_RH, RH_HYSTERESIS, HUMRELAYPIN, &blynkHumLed);
+  PowerManager::autoPower(&isHumAutoPowerOn, &isHumPowerOn, &rH, MAX_RH, RH_HYSTERESIS, HUMRELAYPIN, &blynkHumLed);
 
   sendTempRhToBlynk();
 }
@@ -315,19 +320,17 @@ void initDHT() {
 
 void initLampRelay() {
   pinMode(LAMPRELAYPIN, OUTPUT);
-  isLampPowerOn = commonPower(LAMPRELAYPIN, true, &blynkLampLed);
-  isLampAutoPowerOn = true;
+  PowerManager::manualPower(true, LAMPRELAYPIN, &blynkLampLed, &isLampAutoPowerOn, &isLampPowerOn);
 }
 
 void initFanRelay() {
   pinMode(FANRELAYPIN, OUTPUT);
-  isFanPowerOn = commonPower(FANRELAYPIN, true, &blynkFanLed);
+  PowerManager::manualPower(true, FANRELAYPIN, &blynkFanLed, false, &isFanPowerOn);
 }
 
 void initHumRelay() {
   pinMode(HUMRELAYPIN, OUTPUT);
-  isHumPowerOn = commonPower(HUMRELAYPIN, true, &blynkHumLed);
-  isHumAutoPowerOn = true;
+  PowerManager::manualPower(true, HUMRELAYPIN, &blynkHumLed, &isHumAutoPowerOn, &isHumPowerOn);
 }
 
 void initPump() {
@@ -362,73 +365,74 @@ uint16_t getLightValue() {
   return analogRead(LDRPIN);
 }
 
-void autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin, WidgetLED *led) {
-  if (!*autoControl) return;
-  if (*currVal >= maxVal && *isOn) {
-    *isOn = commonPower(pin, false, led);
-  }
-  else if (*currVal < maxVal - valHyst && !*isOn) {
-    *isOn = commonPower(pin, true, led);
-  }
-}
+// void autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin, WidgetLED *led) {
+//   if (!*autoControl) return;
+//   if (*currVal >= maxVal && *isOn) {
+//     *isOn = commonPower(pin, false, led);
+//   }
+//   else if (*currVal < maxVal - valHyst && !*isOn) {
+//     *isOn = commonPower(pin, true, led);
+//   }
+// }
 
-bool commonPower(uint8_t pin, bool enabled, WidgetLED *led) {
-  bool isOn;
-  if (enabled) {
-    digitalWrite(pin, RELAY_ON);
-    isOn = true;
-    Serial.println("Blynk: enabling led for pin: " + String(pin));
-    led->on();
-  } else {
-    digitalWrite(pin, RELAY_OFF);
-    isOn = false;
-    Serial.println("Blynk: disabling led for pin: " + String(pin));
-    led->off();
-  }
-  return isOn;
-}
+// bool commonPower(uint8_t pin, bool enabled, WidgetLED *led) {
+//   bool isOn;
+//   if (enabled) {
+//     digitalWrite(pin, RELAY_ON);
+//     isOn = true;
+//     Serial.println("Blynk: enabling led for pin: " + String(pin));
+//     led->on();
+//   } else {
+//     digitalWrite(pin, RELAY_OFF);
+//     isOn = false;
+//     Serial.println("Blynk: disabling led for pin: " + String(pin));
+//     led->off();
+//   }
+//   return isOn;
+// }
 
-void manualLampPower(bool enabled) {
-  isLampAutoPowerOn = enabled;
-  isLampPowerOn = commonPower(LAMPRELAYPIN, enabled, &blynkLampLed);
-}
+// void manualLampPower(bool enabled) {
+//   isLampAutoPowerOn = enabled;
+//   isLampPowerOn = commonPower(LAMPRELAYPIN, enabled, &blynkLampLed);
+// }
 
-void manualFanPower(bool enabled) {
-  isFanPowerOn = commonPower(FANRELAYPIN, enabled, &blynkFanLed);
-}
+// void manualFanPower(bool enabled) {
+//   isFanPowerOn = commonPower(FANRELAYPIN, enabled, &blynkFanLed);
+// }
 
-void manualHumPower(bool enabled) {
-  isHumAutoPowerOn = enabled;
-  isHumPowerOn = commonPower(HUMRELAYPIN, enabled, &blynkHumLed);
-}
+// void manualHumPower(bool enabled) {
+//   isHumAutoPowerOn = enabled;
+//   isHumPowerOn = commonPower(HUMRELAYPIN, enabled, &blynkHumLed);
+// }
 
 void scheduledLampPowerOn() {
-  manualLampPower(true);
+  PowerManager::manualPower(true, LAMPRELAYPIN, &blynkLampLed, &isLampAutoPowerOn, &isLampPowerOn);
   lampOnScheduler.setNextEvent();
 }
 
 void scheduledLampPowerOff() {
-  manualLampPower(false);
+  PowerManager::manualPower(false, LAMPRELAYPIN, &blynkLampLed, &isLampAutoPowerOn, &isLampPowerOn);
   lampOffScheduler.setNextEvent();
 }
 
 void scheduledFanPowerOn() {
-  manualFanPower(true);
+  // todo
+  PowerManager::manualPower(true, FANRELAYPIN, &blynkFanLed, false, &isFanPowerOn);
   fanOnScheduler.setNextEvent();
 }
 
 void scheduledFanPowerOff() {
-  manualFanPower(false);
+  PowerManager::manualPower(false, FANRELAYPIN, &blynkFanLed, false, &isFanPowerOn);
   fanOffScheduler.setNextEvent();
 }
 
 void scheduledHumPowerOn() {
-  manualHumPower(true);
+  PowerManager::manualPower(true, HUMRELAYPIN, &blynkHumLed, &isHumAutoPowerOn, &isHumPowerOn);
   humOnScheduler.setNextEvent();
 }
 
 void scheduledHumPowerOff() {
-  manualHumPower(false);
+  PowerManager::manualPower(false, HUMRELAYPIN, &blynkHumLed, &isHumAutoPowerOn, &isHumPowerOn);
   humOffScheduler.setNextEvent();
 }
 
