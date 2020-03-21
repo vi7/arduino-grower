@@ -23,7 +23,6 @@
 #define LAMPRELAYPIN D1
 #define FANRELAYPIN D0
 #define HUMRELAYPIN D4
-#define PUMPPIN D2
 #define LDRPIN A0
 
 /* Blynk defines */
@@ -32,16 +31,12 @@
 #define BLYNK_GRAPHRHPIN V2
 #define BLYNK_LAMPBRLEDPIN V4
 #define BLYNK_LAMPLEDPIN V5
-#define BLYNK_GRAPHPUMPPIN V6
 #define BLYNK_FANLEDPIN V7
 #define BLYNK_HUMLEDPIN V8
 
-// /* normally closed (NC) relay NC defines */
-// #define RELAY_ON LOW
-// #define RELAY_OFF HIGH
+BlynkWifi<BlynkArduinoClientSecure<WiFiClientSecure> > Blynk(_blynkTransport);
 
-#define PUMP_ON HIGH
-#define PUMP_OFF LOW
+// /* normally closed (NC) relay NC defines */
 
 /* monitoring constants */
 const uint8_t MAX_TEMP = 40;
@@ -66,6 +61,11 @@ String request;
 bool isLampPowerOn, isLampAutoPowerOn, isLampOn;
 bool isFanPowerOn;
 bool isHumPowerOn, isHumAutoPowerOn;
+
+Device lamp;
+Device fan;
+Device hum;
+
 Scheduler waterScheduler;
 Scheduler lampOnScheduler;
 Scheduler lampOffScheduler;
@@ -105,9 +105,9 @@ void setup() {
   initLamp();
 
   // delay Blynk dependant init functions
-  timer.setTimeout(2000, initLampRelay);
-  timer.setTimeout(3000, initFanRelay);
-  timer.setTimeout(4000, initHumRelay);
+  timer.setTimeout(2000, []{lamp.init(LAMPRELAYPIN, &blynkLampLed);});
+  timer.setTimeout(3000, []{fan.init(FANRELAYPIN, &blynkFanLed);});
+  timer.setTimeout(4000, []{hum.init(HUMRELAYPIN, &blynkHumLed);});
   timer.setTimeout(5000, initPump);
 
   /* SimpleTimer function execution scheduling */
@@ -115,9 +115,8 @@ void setup() {
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, lampStatus);
   timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, ensureBlynkConnection);
 
-  waterScheduler.init(water, WATER_SCHEDULE);
+  WaterDevice::init();
 
-  // TODO try anon functions
   lampOnScheduler.init([]{
         PowerManager::manualPower(true, LAMPRELAYPIN, &blynkLampLed, &isLampPowerOn, &isLampAutoPowerOn);
         lampOnScheduler.setNextEvent();
@@ -252,11 +251,6 @@ void tempRhDataHandler() {
   sendTempRhToBlynk();
 }
 
-void water() {
-  pumpOn();
-  timer.setTimeout(WATER_DURATION * 1000, pumpOff);
-  waterScheduler.setNextEvent();
-}
 
 //  TODO: refactor this function to be similar to tempRhDataHandler()
 void lampStatus() {
@@ -318,28 +312,6 @@ void initDHT() {
   Serial.println("DHT sensor read interval is: " + String(dhtReadInterval));
 }
 
-void initLampRelay() {
-  pinMode(LAMPRELAYPIN, OUTPUT);
-  PowerManager::manualPower(true, LAMPRELAYPIN, &blynkLampLed, &isLampPowerOn, &isLampAutoPowerOn);
-}
-
-void initFanRelay() {
-  pinMode(FANRELAYPIN, OUTPUT);
-  PowerManager::manualPower(true, FANRELAYPIN, &blynkFanLed, &isFanPowerOn);
-}
-
-void initHumRelay() {
-  pinMode(HUMRELAYPIN, OUTPUT);
-  PowerManager::manualPower(true, HUMRELAYPIN, &blynkHumLed, &isHumPowerOn, &isHumAutoPowerOn);
-}
-
-void initPump() {
-  pinMode(PUMPPIN, OUTPUT);
-  digitalWrite(PUMPPIN, PUMP_OFF);
-
-  Blynk.virtualWrite(BLYNK_GRAPHPUMPPIN, 0);
-}
-
 void initLamp() {
   uint16_t lightVal = getLightValue();
   isLampOn = lightVal < LAMP_ON_VALUE ? true : false;
@@ -365,45 +337,6 @@ uint16_t getLightValue() {
   return analogRead(LDRPIN);
 }
 
-// void autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin, WidgetLED *led) {
-//   if (!*autoControl) return;
-//   if (*currVal >= maxVal && *isOn) {
-//     *isOn = commonPower(pin, false, led);
-//   }
-//   else if (*currVal < maxVal - valHyst && !*isOn) {
-//     *isOn = commonPower(pin, true, led);
-//   }
-// }
-
-// bool commonPower(uint8_t pin, bool enabled, WidgetLED *led) {
-//   bool isOn;
-//   if (enabled) {
-//     digitalWrite(pin, RELAY_ON);
-//     isOn = true;
-//     Serial.println("Blynk: enabling led for pin: " + String(pin));
-//     led->on();
-//   } else {
-//     digitalWrite(pin, RELAY_OFF);
-//     isOn = false;
-//     Serial.println("Blynk: disabling led for pin: " + String(pin));
-//     led->off();
-//   }
-//   return isOn;
-// }
-
-// void manualLampPower(bool enabled) {
-//   isLampAutoPowerOn = enabled;
-//   isLampPowerOn = commonPower(LAMPRELAYPIN, enabled, &blynkLampLed);
-// }
-
-// void manualFanPower(bool enabled) {
-//   isFanPowerOn = commonPower(FANRELAYPIN, enabled, &blynkFanLed);
-// }
-
-// void manualHumPower(bool enabled) {
-//   isHumAutoPowerOn = enabled;
-//   isHumPowerOn = commonPower(HUMRELAYPIN, enabled, &blynkHumLed);
-// }
 
 void scheduledLampPowerOn() {
   PowerManager::manualPower(true, LAMPRELAYPIN, &blynkLampLed, &isLampPowerOn, &isLampAutoPowerOn);
@@ -416,7 +349,6 @@ void scheduledLampPowerOff() {
 }
 
 void scheduledFanPowerOn() {
-  // todo
   PowerManager::manualPower(true, FANRELAYPIN, &blynkFanLed, &isFanPowerOn);
   fanOnScheduler.setNextEvent();
 }
@@ -434,22 +366,6 @@ void scheduledHumPowerOn() {
 void scheduledHumPowerOff() {
   PowerManager::manualPower(false, HUMRELAYPIN, &blynkHumLed, &isHumPowerOn, &isHumAutoPowerOn);
   humOffScheduler.setNextEvent();
-}
-
-void pumpOn() {
-  digitalWrite(PUMPPIN, PUMP_ON);
-  Serial.println(F("[MAIN] [I] Pump is on"));
-
-  Serial.println(F("Blynk: sending pump status"));
-  Blynk.virtualWrite(BLYNK_GRAPHPUMPPIN, 1);
-}
-
-void pumpOff() {
-  digitalWrite(PUMPPIN, PUMP_OFF);
-  Serial.println(F("[MAIN] [I] Pump is off"));
-
-  Serial.println(F("Blynk: sending pump status"));
-  Blynk.virtualWrite(BLYNK_GRAPHPUMPPIN, 0);
 }
 
 void systemRestart() {
