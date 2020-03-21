@@ -9,6 +9,7 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 #include <BlynkSimpleEsp8266_SSL.h>
 #include <SimpleTimer.h>
 #include <DHTesp.h>
@@ -19,7 +20,9 @@
 /***************************/
 /*        FUNCTIONS        */
 /***************************/
-void sendResponse(WiFiClient client);
+void initServer();
+
+void sendReply(const String& content);
 
 // function gets and uses temperature and relative humidity (RH) data
 void tempRhDataHandler();

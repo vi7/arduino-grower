@@ -61,7 +61,7 @@ SimpleTimer timer;
 DHTesp dht;
 float temp, rH;
 uint16_t dhtReadInterval;
-WiFiServer server(80);
+ESP8266WebServer server(80);
 String request;
 bool isLampPowerOn, isLampAutoPowerOn, isLampOn;
 bool isFanPowerOn;
@@ -115,7 +115,6 @@ void setup() {
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, lampStatus);
   timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, ensureBlynkConnection);
 
-// TODO add possibility to pass function with parameters
   waterScheduler.init(water, WATER_SCHEDULE);
   lampOnScheduler.init(scheduledLampPowerOn, LAMP_ON_SCHEDULE);
   lampOffScheduler.init(scheduledLampPowerOff, LAMP_OFF_SCHEDULE);
@@ -130,6 +129,7 @@ void setup() {
   // Serial.print(F("[MAIN] [D] Next watering scheduled on: "));
   // Serial.println(waterScheduler.getNextDateTime());
 
+  initServer();
   server.begin();
 
 }
@@ -143,131 +143,84 @@ void loop() {
   Blynk.run();
   timer.run();
   ezt::events();
-
-  // TODO: move to a separate func or consider "`ESP8266WebServer.h`" usage
-  WiFiClient client = server.available();
-
-  if (client) {
-      Serial.println("New Client.");
-
-      String currentLine = "";
-      while (client.connected()) {
-          if (client.available()) {
-              char c = client.read();
-              Serial.write(c);
-              request += c;
-              if (c == '\n') {
-                  if (currentLine.length() == 0) {
-                    sendResponse(client);
-                    break;
-                  } else {
-                  currentLine = "";
-                  }
-              } else if (c != '\r') {
-              currentLine += c;
-              }
-          }
-      }
-
-      request = "";
-      client.stop();
-      Serial.println("Client disconnected.");
-      Serial.println("");
-  }
+  server.handleClient();
 }
 
 
 /***************************/
 /*        FUNCTIONS        */
 /***************************/
-// TODO: consider "`ESP8266WebServer.h`" usage
-void sendResponse(WiFiClient client) {
-  Serial.println("Sending response");
-  client.println("HTTP/1.1 200 OK");
-  client.println("Content-type:application/json");
-  client.println("Access-Control-Allow-Origin: *");
-  client.println("Connection: close");
-  client.println();
+void initServer() {
+    server.on("/v2/dht/temperature", []{
+    sendReply("{\"temperature\":\"" + String(temp, 1) +"\"}");
+  });
 
-  /*
-   * APIv1 code
-   */
-  if (request.indexOf("GET /v1/dht/temperature") >= 0) {
-      client.println("{\"temperature\":\"" + String(temp, 1) +"\"}");
+  server.on("/v2/dht/humidity", [] {
+    sendReply("{\"humidity\":\"" + String(rH, 0) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v1/dht/humidity") >= 0) {
-      client.println("{\"humidity\":\"" + String(rH, 0) +"\"}");
-
-  } else if (request.indexOf("GET /v1/relay/power/on") >= 0) {
+  server.on("/v2/relay/lamp/power/on", []{
       manualLampPower(true);
-      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
+      sendReply("{\"power\":\"" + String(isLampPowerOn) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v1/relay/power/off") >= 0) {
+  server.on("/v2/relay/lamp/power/off", []{
       manualLampPower(false);
-      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
+      sendReply("{\"power\":\"" + String(isLampPowerOn) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v1/relay/power/status") >= 0) {
-      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
+  server.on("/v2/relay/lamp/power/status", []{
+      sendReply("{\"power\":\"" + String(isLampPowerOn) +"\"}");    
+  });
 
-  } else if (request.indexOf("GET /v1/lamp/status") >= 0) {
-      client.println("{\"lamp\":\"" + String(isLampOn) +"\"}");
-
-  } else if (request.indexOf("GET /v1/system/restart") >= 0) {
-      client.println("{\"restart\":\"OK\"}");
-      delay(500);
-      systemRestart();
-
-  /*
-   * APIv2 code
-   */
-  } else if (request.indexOf("GET /v2/relay/lamp/power/on") >= 0) {
-      manualLampPower(true);
-      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-
-  } else if (request.indexOf("GET /v2/relay/lamp/power/off") >= 0) {
-      manualLampPower(false);
-      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-
-  } else if (request.indexOf("GET /v2/relay/lamp/power/status") >= 0) {
-      client.println("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-
-  } else if (request.indexOf("GET /v2/relay/fan/power/on") >= 0) {
+  server.on("/v2/relay/fan/power/on", [] {
       manualFanPower(true);
-      client.println("{\"power\":\"" + String(isFanPowerOn) +"\"}");
+      sendReply("{\"power\":\"" + String(isFanPowerOn) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v2/relay/fan/power/off") >= 0) {
+  server.on("/v2/relay/fan/power/off", [] {
       manualFanPower(false);
-      client.println("{\"power\":\"" + String(isFanPowerOn) +"\"}");
+      sendReply("{\"power\":\"" + String(isFanPowerOn) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v2/relay/fan/power/status") >= 0) {
-      client.println("{\"power\":\"" + String(isFanPowerOn) +"\"}");
+  server.on("/v2/relay/fan/power/status", [] {
+      sendReply("{\"power\":\"" + String(isFanPowerOn) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v2/relay/hum/power/on") >= 0) {
+  server.on("/v2/relay/hum/power/on", [] {
       manualHumPower(true);
-      client.println("{\"power\":\"" + String(isHumPowerOn) +"\"}");
+      sendReply("{\"power\":\"" + String(isHumPowerOn) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v2/relay/hum/power/off") >= 0) {
+  server.on("/v2/relay/hum/power/off", [] {
       manualHumPower(false);
-      client.println("{\"power\":\"" + String(isHumPowerOn) +"\"}");
+      sendReply("{\"power\":\"" + String(isHumPowerOn) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v2/relay/hum/power/status") >= 0) {
-      client.println("{\"power\":\"" + String(isHumPowerOn) +"\"}");
+  server.on("/v2/relay/hum/power/status", [] {
+      sendReply("{\"power\":\"" + String(isHumPowerOn) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v2/water/schedule/start") >= 0) {
-      client.println("{\"date_time\":\"" + waterScheduler.getStartDateTime(ISO8601) +"\"}");
+  server.on("/v2/water/schedule/start", [] {
+      sendReply("{\"date_time\":\"" + waterScheduler.getStartDateTime(ISO8601) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v2/water/schedule/next") >= 0) {
-      client.println("{\"date_time\":\"" + waterScheduler.getNextDateTime(ISO8601) +"\"}");
+  server.on("/v2/water/schedule/next", [] {
+      sendReply("{\"date_time\":\"" + waterScheduler.getNextDateTime(ISO8601) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v2/water/schedule/interval") >= 0) {
-      client.println("{\"days\":\"" + String(WATER_SCHEDULE.intervalDays) +"\"}");
+  server.on("/v2/water/schedule/interval", [] {
+      sendReply("{\"days\":\"" + String(WATER_SCHEDULE.intervalDays) +"\"}");
+  });
 
-  } else if (request.indexOf("GET /v2/water/schedule/duration") >= 0) {
-      client.println("{\"duration\":\"" + String(WATER_DURATION) +"\"}");
+  server.on("/v2/water/schedule/duration", [] {
+      sendReply("{\"duration\":\"" + String(WATER_DURATION) +"\"}");
+  });
+}
 
-  }
-
-  client.println();
+void sendReply(const String& content) {
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "application/json", content);
 }
 
 // function gets and uses temperature and relative humidity (RH) data
