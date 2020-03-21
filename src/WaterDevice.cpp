@@ -14,7 +14,7 @@ void WaterDevice::init() {
 
 void WaterDevice::water() {
   pumpOn();
-  waterTimer.setTimeout(WATER_DURATION * 1000, pumpOff);
+  timer.setTimeout(WATER_DURATION * 1000, pumpOff);
   scheduler.setNextEvent();
 };
 

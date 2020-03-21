@@ -17,7 +17,8 @@
 #include <scheduler.h>
 #include <schedules.h>
 
-static SimpleTimer waterTimer;
+// timer is defined in main.cpp
+extern SimpleTimer timer;
 static Scheduler scheduler;
 
 class WaterDevice {
