@@ -29,7 +29,7 @@ void sendReply(const String& content);
 // function gets and uses temperature and relative humidity (RH) data
 void tempRhDataHandler();
 
-void water();
+// void water();
 
 void lampStatus();
 
@@ -44,7 +44,7 @@ void initBlynk();
 
 void initDHT();
 
-void initPump();
+// void initPump();
 
 void initLamp();
 
@@ -68,9 +68,9 @@ void scheduledHumPowerOn();
 
 void scheduledHumPowerOff();
 
-void pumpOn();
+// void pumpOn();
 
-void pumpOff();
+// void pumpOff();
 
 void systemRestart();
 

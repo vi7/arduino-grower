@@ -14,15 +14,14 @@
 #include <Arduino.h>
 #include <SimpleTimer.h>
 #include <BlynkSimpleEsp8266_SSL.h>
-#include <schedules.h>
 #include <scheduler.h>
+#include <schedules.h>
 
+static SimpleTimer waterTimer;
+static Scheduler scheduler;
 
 class WaterDevice {
     public:
-        static SimpleTimer timer;
-        static Scheduler scheduler;
-
         static void init();
 
         static void water();

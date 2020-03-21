@@ -108,14 +108,13 @@ void setup() {
   timer.setTimeout(2000, []{lamp.init(LAMPRELAYPIN, &blynkLampLed);});
   timer.setTimeout(3000, []{fan.init(FANRELAYPIN, &blynkFanLed);});
   timer.setTimeout(4000, []{hum.init(HUMRELAYPIN, &blynkHumLed);});
-  timer.setTimeout(5000, initPump);
+  timer.setTimeout(5000, []{WaterDevice::init();});
 
   /* SimpleTimer function execution scheduling */
   timer.setInterval(dhtReadInterval, tempRhDataHandler);
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, lampStatus);
   timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, ensureBlynkConnection);
 
-  WaterDevice::init();
 
   lampOnScheduler.init([]{
         PowerManager::manualPower(true, LAMPRELAYPIN, &blynkLampLed, &isLampPowerOn, &isLampAutoPowerOn);
