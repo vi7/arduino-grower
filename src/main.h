@@ -10,12 +10,14 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <BlynkSimpleEsp8266_SSL.h>
 #include <SimpleTimer.h>
 #include <DHTesp.h>
 
 #include "scheduler.h"
 #include "grower_version.h"
+#include "PowerManager.h"
+#include "Device.h"
+#include "WaterDevice.h"
 
 /***************************/
 /*        FUNCTIONS        */
@@ -27,7 +29,7 @@ void sendReply(const String& content);
 // function gets and uses temperature and relative humidity (RH) data
 void tempRhDataHandler();
 
-void water();
+// void water();
 
 void lampStatus();
 
@@ -42,13 +44,7 @@ void initBlynk();
 
 void initDHT();
 
-void initLampRelay();
-
-void initFanRelay();
-
-void initHumRelay();
-
-void initPump();
+// void initPump();
 
 void initLamp();
 
@@ -59,15 +55,6 @@ void getTempRh();
 
 uint16_t getLightValue();
 
-void autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin, WidgetLED *led);
-
-bool commonPower(uint8_t pin, bool enabled, WidgetLED *led);
-
-void manualLampPower(bool enabled);
-
-void manualFanPower(bool enabled);
-
-void manualHumPower(bool enabled);
 
 void scheduledLampPowerOn();
 
@@ -81,9 +68,9 @@ void scheduledHumPowerOn();
 
 void scheduledHumPowerOff();
 
-void pumpOn();
+// void pumpOn();
 
-void pumpOff();
+// void pumpOff();
 
 void systemRestart();
 
