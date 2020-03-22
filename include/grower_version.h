@@ -11,7 +11,7 @@
 #ifndef GROWER_VERSION_H
 #define GROWER_VERSION_H
 
-const char GROWER_VERSION[] = "0.6.0";
+const char GROWER_VERSION[] = "0.7.0-endpoint";
 // Example version with appended build version (autoincrementing part):
 // const char VERSION[] = "0.4.0-230498"
 

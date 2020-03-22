@@ -18,6 +18,8 @@
 #include "PowerManager.h"
 #include "Device.h"
 #include "WaterDevice.h"
+#include "WebServer.h"
+#include "endpoints.h"
 
 /***************************/
 /*        FUNCTIONS        */
@@ -28,8 +30,6 @@ void sendReply(const String& content);
 
 // function gets and uses temperature and relative humidity (RH) data
 void tempRhDataHandler();
-
-// void water();
 
 void lampStatus();
 
@@ -43,8 +43,6 @@ void initWiFi(String SSID, String PSK);
 void initBlynk();
 
 void initDHT();
-
-// void initPump();
 
 void initLamp();
 
@@ -67,10 +65,6 @@ void scheduledFanPowerOff();
 void scheduledHumPowerOn();
 
 void scheduledHumPowerOff();
-
-// void pumpOn();
-
-// void pumpOff();
 
 void systemRestart();
 

@@ -32,12 +32,7 @@ bool PowerManager::commonPower(uint8_t pin, bool enabled, WidgetLED *led) {
   return isOn;
 }
 
-void PowerManager::manualPower(bool enabled, uint8_t pin, WidgetLED *led, bool *isPowerOn) {
-    bool isOn = commonPower(pin, enabled, led);
-    isPowerOn = &isOn;
-}
-
-void PowerManager::manualPower(bool enabled, uint8_t pin, WidgetLED *led, bool *isAutoPowerOn, bool *isPowerOn) {
-    isAutoPowerOn = &enabled;
-    manualPower(enabled, pin, led, isPowerOn);
+// probably redundant
+bool PowerManager::manualPower(bool enabled, uint8_t pin, WidgetLED *led) {
+    return commonPower(pin, enabled, led);
 }

@@ -56,11 +56,9 @@ SimpleTimer timer;
 DHTesp dht;
 float temp, rH;
 uint16_t dhtReadInterval;
-ESP8266WebServer server(80);
+WebServer server(80);
 String request;
-bool isLampPowerOn, isLampAutoPowerOn, isLampOn;
-bool isFanPowerOn;
-bool isHumPowerOn, isHumAutoPowerOn;
+bool isLampOn;
 
 Device lamp;
 Device fan;
@@ -105,9 +103,9 @@ void setup() {
   initLamp();
 
   // delay Blynk dependant init functions
-  timer.setTimeout(2000, []{lamp.init(LAMPRELAYPIN, &blynkLampLed);});
-  timer.setTimeout(3000, []{fan.init(FANRELAYPIN, &blynkFanLed);});
-  timer.setTimeout(4000, []{hum.init(HUMRELAYPIN, &blynkHumLed);});
+  timer.setTimeout(2000, []{lamp.init(LAMPRELAYPIN, BLYNK_LAMPLEDPIN);});
+  timer.setTimeout(3000, []{fan.init(FANRELAYPIN, BLYNK_FANLEDPIN);});
+  timer.setTimeout(4000, []{hum.init(HUMRELAYPIN, BLYNK_HUMLEDPIN);});
   timer.setTimeout(5000, []{WaterDevice::init();});
 
   /* SimpleTimer function execution scheduling */
@@ -117,7 +115,7 @@ void setup() {
 
 
   lampOnScheduler.init([]{
-        PowerManager::manualPower(true, LAMPRELAYPIN, &blynkLampLed, &isLampPowerOn, &isLampAutoPowerOn);
+        lamp.powerOn();
         lampOnScheduler.setNextEvent();
         }, LAMP_ON_SCHEDULE);
   lampOffScheduler.init(scheduledLampPowerOff, LAMP_OFF_SCHEDULE);
@@ -133,6 +131,18 @@ void setup() {
   // Serial.println(waterScheduler.getNextDateTime());
 
   initServer();
+  server.registerEndpoint(&lamp, LAMP_POWER_ON);
+  server.registerEndpoint(&lamp, LAMP_POWER_OFF);
+  server.registerEndpoint(&lamp ,LAMP_POWER_STATUS);
+  
+  server.registerEndpoint(&fan, FAN_POWER_ON);
+  server.registerEndpoint(&fan, FAN_POWER_OFF);
+  server.registerEndpoint(&fan, FAN_POWER_STATUS);
+
+  server.registerEndpoint(&hum, HUM_POWER_ON);
+  server.registerEndpoint(&hum, HUM_POWER_OFF);
+  server.registerEndpoint(&hum, HUM_POWER_STATUS);
+
   server.begin();
 
 }
@@ -160,48 +170,6 @@ void initServer() {
 
   server.on("/v2/dht/humidity", [] {
     sendReply("{\"humidity\":\"" + String(rH, 0) +"\"}");
-  });
-
-  server.on("/v2/relay/lamp/power/on", []{
-      PowerManager::manualPower(true, LAMPRELAYPIN, &blynkLampLed, &isLampPowerOn, &isLampAutoPowerOn);
-      sendReply("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-  });
-
-  server.on("/v2/relay/lamp/power/off", []{
-      PowerManager::manualPower(false, LAMPRELAYPIN, &blynkLampLed, &isLampPowerOn, &isLampAutoPowerOn);
-      sendReply("{\"power\":\"" + String(isLampPowerOn) +"\"}");
-  });
-
-  server.on("/v2/relay/lamp/power/status", []{
-      sendReply("{\"power\":\"" + String(isLampPowerOn) +"\"}");    
-  });
-
-  server.on("/v2/relay/fan/power/on", [] {
-      PowerManager::manualPower(true, FANRELAYPIN, &blynkFanLed, &isFanPowerOn);
-      sendReply("{\"power\":\"" + String(isFanPowerOn) +"\"}");
-  });
-
-  server.on("/v2/relay/fan/power/off", [] {
-      PowerManager::manualPower(false, FANRELAYPIN, &blynkFanLed, &isFanPowerOn);
-      sendReply("{\"power\":\"" + String(isFanPowerOn) +"\"}");
-  });
-
-  server.on("/v2/relay/fan/power/status", [] {
-      sendReply("{\"power\":\"" + String(isFanPowerOn) +"\"}");
-  });
-
-  server.on("/v2/relay/hum/power/on", [] {
-      PowerManager::manualPower(true, HUMRELAYPIN, &blynkHumLed, &isHumPowerOn, &isHumAutoPowerOn);
-      sendReply("{\"power\":\"" + String(isHumPowerOn) +"\"}");
-  });
-
-  server.on("/v2/relay/hum/power/off", [] {
-      PowerManager::manualPower(false, HUMRELAYPIN, &blynkHumLed, &isHumPowerOn, &isHumAutoPowerOn);
-      sendReply("{\"power\":\"" + String(isHumPowerOn) +"\"}");
-  });
-
-  server.on("/v2/relay/hum/power/status", [] {
-      sendReply("{\"power\":\"" + String(isHumPowerOn) +"\"}");
   });
 
   server.on("/v2/water/schedule/start", [] {
@@ -242,10 +210,10 @@ void tempRhDataHandler() {
   /************  END LOGGING ************/
 
   // automatic temperature monitoring
-  PowerManager::autoPower(&isLampAutoPowerOn, &isLampPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, LAMPRELAYPIN, &blynkLampLed);
+  PowerManager::autoPower(&lamp.isAutoPowerOn, &lamp.isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, LAMPRELAYPIN, &blynkLampLed);
 
   // automatic relative humidity monitoring
-  PowerManager::autoPower(&isHumAutoPowerOn, &isHumPowerOn, &rH, MAX_RH, RH_HYSTERESIS, HUMRELAYPIN, &blynkHumLed);
+  PowerManager::autoPower(&hum.isAutoPowerOn, &hum.isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, HUMRELAYPIN, &blynkHumLed);
 
   sendTempRhToBlynk();
 }
@@ -338,32 +306,32 @@ uint16_t getLightValue() {
 
 
 void scheduledLampPowerOn() {
-  PowerManager::manualPower(true, LAMPRELAYPIN, &blynkLampLed, &isLampPowerOn, &isLampAutoPowerOn);
+  lamp.powerOn();
   lampOnScheduler.setNextEvent();
 }
 
 void scheduledLampPowerOff() {
-  PowerManager::manualPower(false, LAMPRELAYPIN, &blynkLampLed, &isLampPowerOn, &isLampAutoPowerOn);
+  lamp.powerOff();
   lampOffScheduler.setNextEvent();
 }
 
 void scheduledFanPowerOn() {
-  PowerManager::manualPower(true, FANRELAYPIN, &blynkFanLed, &isFanPowerOn);
+  fan.powerOn();
   fanOnScheduler.setNextEvent();
 }
 
 void scheduledFanPowerOff() {
-  PowerManager::manualPower(false, FANRELAYPIN, &blynkFanLed, &isFanPowerOn);
+  fan.powerOff();
   fanOffScheduler.setNextEvent();
 }
 
 void scheduledHumPowerOn() {
-  PowerManager::manualPower(true, HUMRELAYPIN, &blynkHumLed, &isHumPowerOn, &isHumAutoPowerOn);
+  hum.powerOn();
   humOnScheduler.setNextEvent();
 }
 
 void scheduledHumPowerOff() {
-  PowerManager::manualPower(false, HUMRELAYPIN, &blynkHumLed, &isHumPowerOn, &isHumAutoPowerOn);
+  hum.powerOff();
   humOffScheduler.setNextEvent();
 }
 
