@@ -18,22 +18,26 @@ class Device {
 
         uint8_t pin; 
         uint8_t blynkPin;
+        WidgetLED *led;
         bool isPowerOn;
         bool isAutoPowerOn;
 
         void init(uint8_t pin, uint8_t blynkPin);
 
         // TODO add scheduler initialization
-        // void init(uint8_t pin, WidgetLED *led, schedule scheduleOn, schedule scheduleOff);
+        // void init(uint8_t pin, uint8_t blynkPin, schedule scheduleOn, schedule scheduleOff);
 
         void powerOn();
 
         void powerOff();
 
+        void scheduledPowerOn(Scheduler scheduler);
+
+        void scheduledPowerOff(Scheduler scheduler);
+
         String status();
 
     private:
-        WidgetLED *led;
         // Scheduler schedulerOn;
         // Scheduler schedulerOff;
 };

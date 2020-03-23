@@ -16,19 +16,36 @@
 #include <BlynkSimpleEsp8266_SSL.h>
 #include <scheduler.h>
 #include <schedules.h>
+#include "Device.h"
 
-static SimpleTimer waterTimer;
-static Scheduler scheduler;
+extern SimpleTimer timer;
+extern Scheduler waterScheduler;
 
-class WaterDevice {
+// TODO get rid of static, after scheduler will be implemented
+class WaterDevice: public Device {
     public:
+
+        WaterDevice();
+
         static void init();
 
-        static void water();
+        void init(uint8_t pin, uint8_t blynkPin);
+
+        void powerOn();
+
+        void powerOff();
+
+        String status();
 
         static void pumpOn();
 
         static void pumpOff();
+
+        static void water();
+
+    private:
+        uint8_t pin;
+        uint8_t blynkPin;
 
 };
 

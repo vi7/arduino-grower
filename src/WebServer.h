@@ -14,8 +14,7 @@ class WebServer: public ESP8266WebServer {
     public: 
         using ESP8266WebServer::ESP8266WebServer;
 
-        // TODO possibility to pass array of endpoints
-        void registerEndpoint(Device *device, endpoint endpoint);
+        void registerEndpoint(Device *device, endpoint endpoints[]);
 
         void sendReply(const String& content);
 };

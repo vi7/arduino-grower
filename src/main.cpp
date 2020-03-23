@@ -24,6 +24,7 @@
 #define FANRELAYPIN D0
 #define HUMRELAYPIN D4
 #define LDRPIN A0
+#define PUMPPIN D2
 
 /* Blynk defines */
 #define BLYNK_LCDPIN V0
@@ -31,12 +32,9 @@
 #define BLYNK_GRAPHRHPIN V2
 #define BLYNK_LAMPBRLEDPIN V4
 #define BLYNK_LAMPLEDPIN V5
+#define BLYNK_GRAPHPUMPPIN V6
 #define BLYNK_FANLEDPIN V7
 #define BLYNK_HUMLEDPIN V8
-
-BlynkWifi<BlynkArduinoClientSecure<WiFiClientSecure> > Blynk(_blynkTransport);
-
-// /* normally closed (NC) relay NC defines */
 
 /* monitoring constants */
 const uint8_t MAX_TEMP = 40;
@@ -53,35 +51,19 @@ const uint8_t LAMP_ON_VALUE = 200;
 const uint16_t LAMP_OFF_VALUE = 900;
 
 SimpleTimer timer;
-DHTesp dht;
-float temp, rH;
-uint16_t dhtReadInterval;
 WebServer server(80);
-String request;
 bool isLampOn;
 
-Device lamp;
-Device fan;
-Device hum;
+Device lamp, fan, hum;
+WaterDevice waterDevice;
+DHTDevice dht;
 
 Scheduler waterScheduler;
-Scheduler lampOnScheduler;
-Scheduler lampOffScheduler;
-Scheduler fanOnScheduler;
-Scheduler fanOffScheduler;
-Scheduler humOnScheduler;
-Scheduler humOffScheduler;
+Scheduler lampOnScheduler, lampOffScheduler;
+Scheduler fanOnScheduler, fanOffScheduler;
+Scheduler humOnScheduler, humOffScheduler;
 
-/* Blynk stuff */
-// blynk connection check interval in seconds
-const uint8_t BLYNK_CHECK_INTERVAL = 30;
-
-WidgetLCD blynkLcd(BLYNK_LCDPIN);
 WidgetLED blynkLampBrLed(BLYNK_LAMPBRLEDPIN);
-WidgetLED blynkLampLed(BLYNK_LAMPLEDPIN);
-WidgetLED blynkFanLed(BLYNK_FANLEDPIN);
-WidgetLED blynkHumLed(BLYNK_HUMLEDPIN);
-
 
 /*****************/
 /*     SETUP     */
@@ -98,31 +80,29 @@ void setup() {
   Serial.println(F("************\n\n"));
 
   initWiFi(WIFI_SSID, WIFI_PSK);
-  initBlynk();
-  initDHT();
+  BlynkManager::init(BLYNK_LCDPIN);
+  dht.init(DHTPIN, BLYNK_GRAPHTEMPPIN, BLYNK_GRAPHRHPIN);
   initLamp();
 
   // delay Blynk dependant init functions
   timer.setTimeout(2000, []{lamp.init(LAMPRELAYPIN, BLYNK_LAMPLEDPIN);});
   timer.setTimeout(3000, []{fan.init(FANRELAYPIN, BLYNK_FANLEDPIN);});
   timer.setTimeout(4000, []{hum.init(HUMRELAYPIN, BLYNK_HUMLEDPIN);});
-  timer.setTimeout(5000, []{WaterDevice::init();});
+  timer.setTimeout(5000, []{waterDevice.init(PUMPPIN, BLYNK_GRAPHPUMPPIN);});
 
   /* SimpleTimer function execution scheduling */
-  timer.setInterval(dhtReadInterval, tempRhDataHandler);
+  timer.setInterval(dht.dhtReadInterval, []{dht.tempDataHandler(lamp, MAX_TEMP, TEMP_HYSTERESIS);});
+  timer.setInterval(dht.dhtReadInterval, []{dht.rhDataHandler(hum, MAX_RH, RH_HYSTERESIS);});
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, lampStatus);
-  timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, ensureBlynkConnection);
+  timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, BlynkManager::ensureBlynkConnection);
 
 
-  lampOnScheduler.init([]{
-        lamp.powerOn();
-        lampOnScheduler.setNextEvent();
-        }, LAMP_ON_SCHEDULE);
-  lampOffScheduler.init(scheduledLampPowerOff, LAMP_OFF_SCHEDULE);
-  fanOnScheduler.init(scheduledFanPowerOn, FAN_ON_SCHEDULE);
-  fanOffScheduler.init(scheduledFanPowerOff, FAN_OFF_SCHEDULE);
-  humOnScheduler.init(scheduledHumPowerOn, HUM_ON_SCHEDULE);
-  humOffScheduler.init(scheduledHumPowerOff, HUM_OFF_SCHEDULE);
+  lampOnScheduler.init([]{lamp.scheduledPowerOn(lampOnScheduler);}, LAMP_ON_SCHEDULE);
+  lampOffScheduler.init([]{lamp.scheduledPowerOff(lampOffScheduler);}, LAMP_OFF_SCHEDULE);
+  fanOnScheduler.init([]{fan.scheduledPowerOn(fanOnScheduler);}, FAN_ON_SCHEDULE);
+  fanOffScheduler.init([]{fan.scheduledPowerOff(fanOffScheduler);}, FAN_OFF_SCHEDULE);
+  humOnScheduler.init([]{hum.scheduledPowerOn(humOnScheduler);}, HUM_ON_SCHEDULE);
+  humOffScheduler.init([]{hum.scheduledPowerOff(humOffScheduler);}, HUM_OFF_SCHEDULE);
 
   // TODO: candidate for debug logging
   // Serial.print(F("[MAIN] [D] Requested watering start time: "));
@@ -130,18 +110,11 @@ void setup() {
   // Serial.print(F("[MAIN] [D] Next watering scheduled on: "));
   // Serial.println(waterScheduler.getNextDateTime());
 
-  initServer();
-  server.registerEndpoint(&lamp, LAMP_POWER_ON);
-  server.registerEndpoint(&lamp, LAMP_POWER_OFF);
-  server.registerEndpoint(&lamp ,LAMP_POWER_STATUS);
-  
-  server.registerEndpoint(&fan, FAN_POWER_ON);
-  server.registerEndpoint(&fan, FAN_POWER_OFF);
-  server.registerEndpoint(&fan, FAN_POWER_STATUS);
-
-  server.registerEndpoint(&hum, HUM_POWER_ON);
-  server.registerEndpoint(&hum, HUM_POWER_OFF);
-  server.registerEndpoint(&hum, HUM_POWER_STATUS);
+  server.registerEndpoint(&lamp, LAMP_ENDPOINTS);
+  server.registerEndpoint(&fan, FAN_ENDPOINTS);
+  server.registerEndpoint(&hum, HUM_ENDPOINTS);
+  server.registerEndpoint(&waterDevice, WATER_ENDPOINTS);
+  server.registerEndpoint(&dht, DHT_ENDPOINTS);
 
   server.begin();
 
@@ -163,62 +136,6 @@ void loop() {
 /***************************/
 /*        FUNCTIONS        */
 /***************************/
-void initServer() {
-    server.on("/v2/dht/temperature", []{
-    sendReply("{\"temperature\":\"" + String(temp, 1) +"\"}");
-  });
-
-  server.on("/v2/dht/humidity", [] {
-    sendReply("{\"humidity\":\"" + String(rH, 0) +"\"}");
-  });
-
-  server.on("/v2/water/schedule/start", [] {
-      sendReply("{\"date_time\":\"" + waterScheduler.getStartDateTime(ISO8601) +"\"}");
-  });
-
-  server.on("/v2/water/schedule/next", [] {
-      sendReply("{\"date_time\":\"" + waterScheduler.getNextDateTime(ISO8601) +"\"}");
-  });
-
-  server.on("/v2/water/schedule/interval", [] {
-      sendReply("{\"days\":\"" + String(WATER_SCHEDULE.intervalDays) +"\"}");
-  });
-
-  server.on("/v2/water/schedule/duration", [] {
-      sendReply("{\"duration\":\"" + String(WATER_DURATION) +"\"}");
-  });
-}
-
-void sendReply(const String& content) {
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.send(200, "application/json", content);
-}
-
-// function gets and uses temperature and relative humidity (RH) data
-void tempRhDataHandler() {
-  getTempRh();
-
-  /************ LOGGING ************/
-  // TODO: candidate for debug logging
-  // Serial.print("DHT " + String(dht.getStatusString()));
-  // Serial.print(F("\t"));
-  // Serial.print(F("temperature: "));
-  // Serial.print(temp);
-  // Serial.print(F("\t\t"));
-  // Serial.print(F("RH: "));
-  // Serial.println(rH);
-  /************  END LOGGING ************/
-
-  // automatic temperature monitoring
-  PowerManager::autoPower(&lamp.isAutoPowerOn, &lamp.isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, LAMPRELAYPIN, &blynkLampLed);
-
-  // automatic relative humidity monitoring
-  PowerManager::autoPower(&hum.isAutoPowerOn, &hum.isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, HUMRELAYPIN, &blynkHumLed);
-
-  sendTempRhToBlynk();
-}
-
-
 //  TODO: refactor this function to be similar to tempRhDataHandler()
 void lampStatus() {
   uint16_t lightVal = getLightValue();
@@ -233,20 +150,6 @@ void lampStatus() {
     isLampOn = false;
   }
   sendLampToBlynk(ledBrightness);
-}
-
-// TODO: check if this really needed, assuming that Blynk connection still fails after WiFi issues
-void ensureBlynkConnection() {
-  if (Blynk.connected()) {
-    // TODO: candidate for debug logging
-    // Serial.println(F("Blynk watchdog: connected to the server"));
-    return;
-  } else {
-    // TODO: candidate for error logging
-    Serial.println(F("Blynk watchdog: connection to the server FAILED! Reconnecting..."));
-    Blynk.disconnect();
-    Blynk.connect(BLYNK_CHECK_INTERVAL);
-  }
 }
 
 
@@ -268,17 +171,6 @@ void initWiFi(String SSID, String PSK) {
   Serial.println(WiFi.localIP());
 }
 
-void initBlynk() {
-  Blynk.config(BLYNK_AUTH);
-}
-
-void initDHT() {
-  pinMode(DHTPIN, INPUT_PULLUP);
-  dht.setup(DHTPIN, DHTesp::DHT22);
-  dhtReadInterval = (dht.getMinimumSamplingPeriod());
-  Serial.println("DHT sensor read interval is: " + String(dhtReadInterval));
-}
-
 void initLamp() {
   uint16_t lightVal = getLightValue();
   isLampOn = lightVal < LAMP_ON_VALUE ? true : false;
@@ -288,51 +180,8 @@ void initLamp() {
 /*****************************/
 /*     UTILITY FUNCTIONS     */
 /*****************************/
-/* TODO: refactor getTempRh() func to use TempAndHumidity struct
- * from the DHT lib instead of separate temp and RH vars
- */
-void getTempRh() {
-  rH = dht.getHumidity();
-  temp = dht.getTemperature();
-  if (isnan(rH) || isnan(temp)) {
-    Serial.println(F("Failed to read from DHT sensor!"));
-    return;
-  }
-}
-
 uint16_t getLightValue() {
   return analogRead(LDRPIN);
-}
-
-
-void scheduledLampPowerOn() {
-  lamp.powerOn();
-  lampOnScheduler.setNextEvent();
-}
-
-void scheduledLampPowerOff() {
-  lamp.powerOff();
-  lampOffScheduler.setNextEvent();
-}
-
-void scheduledFanPowerOn() {
-  fan.powerOn();
-  fanOnScheduler.setNextEvent();
-}
-
-void scheduledFanPowerOff() {
-  fan.powerOff();
-  fanOffScheduler.setNextEvent();
-}
-
-void scheduledHumPowerOn() {
-  hum.powerOn();
-  humOnScheduler.setNextEvent();
-}
-
-void scheduledHumPowerOff() {
-  hum.powerOff();
-  humOffScheduler.setNextEvent();
 }
 
 void systemRestart() {
@@ -340,21 +189,6 @@ void systemRestart() {
   ESP.restart();
 }
 
-void sendTempRhToBlynk() {
-
-  // TODO: candidate for debug logging
-  // Serial.println(F("Blynk: sending temperature and RH data"));
-
-  // send data to the LCD widget
-  String tempStr = "Temp: " + String(temp, 1) + "℃";
-  String rHStr = "RH: " + String(rH, 0) + "%";
-  blynkLcd.clear();
-  blynkLcd.print(0, 0, tempStr); // use: (position X: 0-15, position Y: 0-1, "Message you want to print")
-  blynkLcd.print(0, 1, rHStr);
-  // send data to the SuperChart widget
-  Blynk.virtualWrite(BLYNK_GRAPHTEMPPIN, temp);
-  Blynk.virtualWrite(BLYNK_GRAPHRHPIN, rH);
-}
 
 void sendLampToBlynk(uint8_t brightness) {
 

@@ -27,6 +27,16 @@ void Device::powerOff() {
     isAutoPowerOn = false;
 }
 
+void Device::scheduledPowerOn(Scheduler scheduler) {
+    powerOn();
+    scheduler.setNextEvent();
+}
+
+void Device::scheduledPowerOff(Scheduler scheduler) {
+    powerOff();
+    scheduler.setNextEvent();
+}
+
 String Device::status() {
     return "{\"power\":\"" + String(isPowerOn) +"\"}";
 }
