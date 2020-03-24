@@ -45,3 +45,11 @@ void BlynkManager::ensureBlynkConnection() {
     Blynk.connect(BLYNK_CHECK_INTERVAL);
   }
 }
+
+
+void BlynkManager::sendLampToBlynk(uint8_t brightness, WidgetLED *led) {
+
+  // TODO: candidate for debug logging
+  // Serial.println(F("Blynk: sending lamp brightness"));
+  led->setValue(brightness);
+}

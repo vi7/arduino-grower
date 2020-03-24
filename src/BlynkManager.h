@@ -22,6 +22,8 @@ class BlynkManager {
 
         static void ensureBlynkConnection();
 
+        static void sendLampToBlynk(uint8_t brightness, WidgetLED *led);
+
 };
 
 #endif

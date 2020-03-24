@@ -9,8 +9,19 @@
 //#define BLYNK_PRINT Serial // Defines the object that is used for printing
 //#define BLYNK_DEBUG        // Optional, this enables more detailed prints
 
-#include "main.h"
+#include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <SimpleTimer.h>
+
+#include "scheduler.h"
 #include "schedules.h"
+#include "grower_version.h"
+#include "WebServer.h"
+#include "endpoints.h"
+#include "Device.h"
+#include "WaterDevice.h"
+#include "DHTDevice.h"
+#include "LDRDevice.h"
 
 /*
  * include secrets and credentials
@@ -46,9 +57,6 @@ const uint8_t MAX_RH = 50;
 const uint8_t RH_HYSTERESIS = 10;
 // lamp check interval in seconds
 const uint8_t LIGHT_CHECK_INTERVAL = 1;
-// LDR sensor values. The lower value is the brighter is light.
-const uint8_t LAMP_ON_VALUE = 200;
-const uint16_t LAMP_OFF_VALUE = 900;
 
 SimpleTimer timer;
 WebServer server(80);
@@ -57,13 +65,36 @@ bool isLampOn;
 Device lamp, fan, hum;
 WaterDevice waterDevice;
 DHTDevice dht;
+LDRDevice ldr; 
 
 Scheduler waterScheduler;
 Scheduler lampOnScheduler, lampOffScheduler;
 Scheduler fanOnScheduler, fanOffScheduler;
 Scheduler humOnScheduler, humOffScheduler;
 
-WidgetLED blynkLampBrLed(BLYNK_LAMPBRLEDPIN);
+
+/**************************/
+/*     FUNCTIONS     */
+/**************************/
+void initWiFi(String SSID, String PSK) {
+  WiFi.begin(SSID, PSK);
+
+  Serial.print("Connecting to: " + SSID);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.println(F("WiFi connected"));
+  Serial.print(F("IP address: "));
+  Serial.println(WiFi.localIP());
+}
+
+void systemRestart() {
+  Serial.println(F("Restarting device..."));
+  ESP.restart();
+}
 
 /*****************/
 /*     SETUP     */
@@ -82,7 +113,7 @@ void setup() {
   initWiFi(WIFI_SSID, WIFI_PSK);
   BlynkManager::init(BLYNK_LCDPIN);
   dht.init(DHTPIN, BLYNK_GRAPHTEMPPIN, BLYNK_GRAPHRHPIN);
-  initLamp();
+  ldr.init(LDRPIN, BLYNK_LAMPBRLEDPIN);
 
   // delay Blynk dependant init functions
   timer.setTimeout(2000, []{lamp.init(LAMPRELAYPIN, BLYNK_LAMPLEDPIN);});
@@ -93,7 +124,7 @@ void setup() {
   /* SimpleTimer function execution scheduling */
   timer.setInterval(dht.dhtReadInterval, []{dht.tempDataHandler(lamp, MAX_TEMP, TEMP_HYSTERESIS);});
   timer.setInterval(dht.dhtReadInterval, []{dht.rhDataHandler(hum, MAX_RH, RH_HYSTERESIS);});
-  timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, lampStatus);
+  timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, []{ldr.lampStatus();});
   timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, BlynkManager::ensureBlynkConnection);
 
 
@@ -120,7 +151,6 @@ void setup() {
 
 }
 
-
 /****************/
 /*     LOOP     */
 /****************/
@@ -130,69 +160,4 @@ void loop() {
   timer.run();
   ezt::events();
   server.handleClient();
-}
-
-
-/***************************/
-/*        FUNCTIONS        */
-/***************************/
-//  TODO: refactor this function to be similar to tempRhDataHandler()
-void lampStatus() {
-  uint16_t lightVal = getLightValue();
-  uint8_t ledBrightness = map(lightVal, 0, 1023, 255, 0);
-  // TODO: candidate for debug logging
-  // Serial.println("LDR sensor: " + String(lightVal));
-  if (lightVal < LAMP_ON_VALUE && !isLampOn) {
-    Serial.println(F("LDR sensor: lamp is on"));
-    isLampOn = true;
-  } else if (lightVal > LAMP_OFF_VALUE && isLampOn) {
-    Serial.println(F("LDR sensor: lamp is off"));
-    isLampOn = false;
-  }
-  sendLampToBlynk(ledBrightness);
-}
-
-
-/**************************/
-/*     INIT FUNCTIONS     */
-/**************************/
-void initWiFi(String SSID, String PSK) {
-  WiFi.begin(SSID, PSK);
-
-  Serial.print("Connecting to: " + SSID);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println();
-  Serial.println(F("WiFi connected"));
-  Serial.print(F("IP address: "));
-  Serial.println(WiFi.localIP());
-}
-
-void initLamp() {
-  uint16_t lightVal = getLightValue();
-  isLampOn = lightVal < LAMP_ON_VALUE ? true : false;
-}
-
-
-/*****************************/
-/*     UTILITY FUNCTIONS     */
-/*****************************/
-uint16_t getLightValue() {
-  return analogRead(LDRPIN);
-}
-
-void systemRestart() {
-  Serial.println(F("Restarting device..."));
-  ESP.restart();
-}
-
-
-void sendLampToBlynk(uint8_t brightness) {
-
-  // TODO: candidate for debug logging
-  // Serial.println(F("Blynk: sending lamp brightness"));
-  blynkLampBrLed.setValue(brightness);
 }
