@@ -21,9 +21,9 @@ class DHTDevice: public Device {
 
         void init(uint8_t pin, uint8_t blynkTempPin, uint8_t blynkRhPin); 
 
-        void tempDataHandler(Device device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS);
+        void tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS);
 
-        void rhDataHandler(Device device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS);
+        void rhDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS);
 
         void powerOn();
 

@@ -19,15 +19,13 @@ void BlynkManager::init(uint8_t pin) {
 void BlynkManager::sendTempToBlynk(float temp, uint8_t blynkPin) {
   // send dta to the LCD widget
   String tempStr = "Temp: " + String(temp, 1) + "℃";
-  blynkLcd.clear();
   blynkLcd.print(0, 0, tempStr); 
   // send data to the SuperChart widget
   Blynk.virtualWrite(blynkPin, temp);
 }
 
 void BlynkManager::sendRhToBlynk(float rh, uint8_t blynkPin) {
-  String rHStr = "RH: " + String(rh, 0) + "%";
-  blynkLcd.clear();
+  String rHStr = "RH: " + String(rh, 0) + "% ";
   blynkLcd.print(0, 1, rHStr);
   Blynk.virtualWrite(blynkPin, rh);
 }

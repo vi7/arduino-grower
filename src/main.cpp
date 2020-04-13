@@ -53,7 +53,7 @@ const uint8_t TEMP_HYSTERESIS = 10;
 // Recommended RH values:
 // - vegetative - 60%
 // - flowering - 50%
-const uint8_t MAX_RH = 50;
+const uint8_t MAX_RH = 60;
 const uint8_t RH_HYSTERESIS = 10;
 // lamp check interval in seconds
 const uint8_t LIGHT_CHECK_INTERVAL = 1;
@@ -121,8 +121,8 @@ void setup() {
   timer.setTimeout(5000, []{waterDevice.init(PUMPPIN, BLYNK_GRAPHPUMPPIN);});
 
   /* SimpleTimer function execution scheduling */
-  timer.setInterval(dht.dhtReadInterval, []{dht.tempDataHandler(lamp, MAX_TEMP, TEMP_HYSTERESIS);});
-  timer.setInterval(dht.dhtReadInterval, []{dht.rhDataHandler(hum, MAX_RH, RH_HYSTERESIS);});
+  timer.setInterval(dht.dhtReadInterval, []{dht.tempDataHandler(&lamp, MAX_TEMP, TEMP_HYSTERESIS);});
+  timer.setInterval(dht.dhtReadInterval, []{dht.rhDataHandler(&hum, MAX_RH, RH_HYSTERESIS);});
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, []{ldr.lampStatus();});
   timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, BlynkManager::ensureBlynkConnection);
 

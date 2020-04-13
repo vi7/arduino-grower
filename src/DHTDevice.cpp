@@ -27,25 +27,24 @@ void DHTDevice::init(uint8_t pin, uint8_t blynkTempPin, uint8_t blynkRhPin) {
   // Serial.print(F("RH: "));
   // Serial.println(rH);
   /************  END LOGGING ************/
-void DHTDevice::tempDataHandler(Device device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS) {
+void DHTDevice::tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS) {
   temp = dht.getTemperature();
   if (isnan(temp)) {
     Serial.println(F("Failed to read from DHT sensor!"));
     return;
   }
 
-  PowerManager::autoPower(&device.isAutoPowerOn, &device.isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, device.pin, device.led);
+  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, device->pin, device->led);
   BlynkManager::sendTempToBlynk(temp, blynkTempPin);
 }
 
-void DHTDevice::rhDataHandler(Device device, uint8_t MAX_RH, uint8_t RH_HYSTERESIS) {
+void DHTDevice::rhDataHandler(Device* device, uint8_t MAX_RH, uint8_t RH_HYSTERESIS) {
   rH = dht.getHumidity();
   if (isnan(rH)) {
     Serial.println(F("Failed to read from DHT sensor!"));
     return;
   }
-
-  PowerManager::autoPower(&device.isAutoPowerOn, &device.isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, device.pin, device.led);
+  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, device->pin, device->led);
   BlynkManager::sendRhToBlynk(rH, blynkRhPin);
 }
 
