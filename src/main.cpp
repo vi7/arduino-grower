@@ -60,7 +60,6 @@ const uint8_t LIGHT_CHECK_INTERVAL = 1;
 
 SimpleTimer timer;
 WebServer server(80);
-bool isLampOn;
 
 Device lamp, fan, hum;
 WaterDevice waterDevice;
@@ -141,11 +140,11 @@ void setup() {
   // Serial.print(F("[MAIN] [D] Next watering scheduled on: "));
   // Serial.println(waterScheduler.getNextDateTime());
 
-  server.registerEndpoint(&lamp, LAMP_ENDPOINTS);
-  server.registerEndpoint(&fan, FAN_ENDPOINTS);
-  server.registerEndpoint(&hum, HUM_ENDPOINTS);
-  server.registerEndpoint(&waterDevice, WATER_ENDPOINTS);
-  server.registerEndpoint(&dht, DHT_ENDPOINTS);
+  server.registerEndpoint(&lamp, LAMP_ENDPOINTS, sizeof(LAMP_ENDPOINTS)/sizeof(LAMP_ENDPOINTS[0]));
+  server.registerEndpoint(&fan, FAN_ENDPOINTS, sizeof(FAN_ENDPOINTS)/sizeof(FAN_ENDPOINTS[0]));
+  server.registerEndpoint(&hum, HUM_ENDPOINTS, sizeof(HUM_ENDPOINTS)/sizeof(HUM_ENDPOINTS[0]));
+  server.registerEndpoint(&waterDevice, WATER_ENDPOINTS, sizeof(WATER_ENDPOINTS)/sizeof(WATER_ENDPOINTS[0]));
+  server.registerEndpoint(&dht, DHT_ENDPOINTS, sizeof(DHT_ENDPOINTS)/sizeof(DHT_ENDPOINTS[0]));
 
   server.begin();
 
@@ -161,3 +160,4 @@ void loop() {
   ezt::events();
   server.handleClient();
 }
+

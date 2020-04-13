@@ -4,10 +4,7 @@
 
 #include "WebServer.h"
 
-void WebServer::registerEndpoint(Device *device, endpoint endpoints[]) {
-
-  int size = sizeof(endpoints)/sizeof(endpoints[0]);
-
+void WebServer::registerEndpoint(Device *device, endpoint endpoints[], int size) {
   for (int i = 0; i < size; i++) {
     endpoint endpoint = endpoints[i];
     switch (endpoint.type) {

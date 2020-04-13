@@ -24,9 +24,6 @@ class Device {
 
         void init(uint8_t pin, uint8_t blynkPin);
 
-        // TODO add scheduler initialization
-        // void init(uint8_t pin, uint8_t blynkPin, schedule scheduleOn, schedule scheduleOff);
-
         void powerOn();
 
         void powerOff();
@@ -37,9 +34,6 @@ class Device {
 
         String status();
 
-    private:
-        // Scheduler schedulerOn;
-        // Scheduler schedulerOff;
 };
 
 #endif

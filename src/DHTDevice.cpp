@@ -5,7 +5,6 @@
 #include "DHTDevice.h"
 
 void DHTDevice::init(uint8_t pin, uint8_t blynkTempPin) {
-// TODO 
   pinMode(pin, INPUT_PULLUP);
   dht.setup(pin, DHTesp::DHT22);
   dhtReadInterval = (dht.getMinimumSamplingPeriod());
@@ -35,7 +34,6 @@ void DHTDevice::tempDataHandler(Device device, uint8_t MAX_TEMP, uint8_t TEMP_HY
     return;
   }
 
-// TODO IMPORTANT! double test isPowerOn value in device after function execution
   PowerManager::autoPower(&device.isAutoPowerOn, &device.isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, device.pin, device.led);
   BlynkManager::sendTempToBlynk(temp, blynkTempPin);
 }
@@ -47,7 +45,6 @@ void DHTDevice::rhDataHandler(Device device, uint8_t MAX_RH, uint8_t RH_HYSTERES
     return;
   }
 
-// TODO IMPORTANT! double test isPowerOn value in device after function execution
   PowerManager::autoPower(&device.isAutoPowerOn, &device.isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, device.pin, device.led);
   BlynkManager::sendRhToBlynk(rH, blynkRhPin);
 }

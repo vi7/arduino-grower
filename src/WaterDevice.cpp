@@ -8,7 +8,6 @@
 WaterDevice::WaterDevice() {
 };
 
-// TODO remove initialization with hardcoded pins after scheduler will be implemented
 void WaterDevice::init() {
   pinMode(PUMPPIN, OUTPUT);
   digitalWrite(PUMPPIN, PUMP_OFF);
@@ -26,12 +25,12 @@ void WaterDevice::init(uint8_t pin, uint8_t blynkPin) {
 };
 
 void WaterDevice::powerOn() {
-  // TODO implement after scheduler
+  // TODO implement after scheduler init will be moved to main
 }
 
 
 void WaterDevice::powerOff() {
-  // TODO implement after scheduler
+  // TODO implement after scheduler init will be moved to main
 }
 
 String WaterDevice::status() {
@@ -41,7 +40,7 @@ String WaterDevice::status() {
   + "\"duration\":\"" + String(WATER_DURATION) +"\"}";
 }
 
-// TODO toBeRemoved
+// TODO toBeRemoved after scheduler init will be moved to main
 void WaterDevice::pumpOn() {
   digitalWrite(PUMPPIN, PUMP_ON);
   Serial.println(F("[MAIN] [I] Pump is on"));
@@ -50,7 +49,7 @@ void WaterDevice::pumpOn() {
   Blynk.virtualWrite(BLYNK_GRAPHPUMPPIN, 1);
 }
 
-// TODO toBeRemoved
+// TODO toBeRemoved after scheduler init will be moved to main
 void WaterDevice::pumpOff() {
   digitalWrite(PUMPPIN, PUMP_OFF);
   Serial.println(F("[MAIN] [I] Pump is off"));

@@ -21,7 +21,7 @@
 extern SimpleTimer timer;
 extern Scheduler waterScheduler;
 
-// TODO get rid of static, after scheduler will be implemented
+// TODO get rid of static, after scheduler init will be moved to main
 class WaterDevice: public Device {
     public:
 

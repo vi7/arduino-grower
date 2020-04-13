@@ -19,10 +19,6 @@ class PowerManager {
 
         static bool manualPower(bool enabled, uint8_t pin, WidgetLED *led);
 
-    private: 
-
-        static bool commonPower(uint8_t pin, bool enabled, WidgetLED *led);
-
 };
 
 

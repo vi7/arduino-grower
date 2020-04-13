@@ -14,7 +14,8 @@ class WebServer: public ESP8266WebServer {
     public: 
         using ESP8266WebServer::ESP8266WebServer;
 
-        void registerEndpoint(Device *device, endpoint endpoints[]);
+        // Size of endpoints array passed explicitly because of array-to-pointer decay
+        void registerEndpoint(Device *device, endpoint endpoints[], int size);
 
         void sendReply(const String& content);
 };
