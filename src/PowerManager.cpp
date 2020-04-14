@@ -9,14 +9,14 @@
 void PowerManager::autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin, WidgetLED *led) {
   if (!*autoControl) return;
   if (*currVal >= maxVal && *isOn) {
-    *isOn = commonPower(pin, false, led);
+    *isOn = manualPower(false, pin, led);
   }
   else if (*currVal < maxVal - valHyst && !*isOn) {
-    *isOn = commonPower(pin, true, led);
+    *isOn = manualPower(true, pin, led);
   }
 }
 
-bool PowerManager::commonPower(uint8_t pin, bool enabled, WidgetLED *led) {
+bool PowerManager::manualPower(bool enabled, uint8_t pin, WidgetLED *led) {
   bool isOn;
   if (enabled) {
     digitalWrite(pin, RELAY_ON);
@@ -30,14 +30,4 @@ bool PowerManager::commonPower(uint8_t pin, bool enabled, WidgetLED *led) {
     led->off();
   }
   return isOn;
-}
-
-void PowerManager::manualPower(bool enabled, uint8_t pin, WidgetLED *led, bool *isPowerOn) {
-    bool isOn = commonPower(pin, enabled, led);
-    isPowerOn = &isOn;
-}
-
-void PowerManager::manualPower(bool enabled, uint8_t pin, WidgetLED *led, bool *isAutoPowerOn, bool *isPowerOn) {
-    isAutoPowerOn = &enabled;
-    manualPower(enabled, pin, led, isPowerOn);
 }

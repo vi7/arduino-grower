@@ -17,13 +17,7 @@ class PowerManager {
         
         static void autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin, WidgetLED *led);
 
-        static void manualPower(bool enabled, uint8_t pin, WidgetLED *led, bool *isPowerOn);
-
-        static void manualPower(bool enabled, uint8_t pin, WidgetLED *led, bool *isPowerOn, bool *isAutoPowerOn);
-
-    private: 
-
-        static bool commonPower(uint8_t pin, bool enabled, WidgetLED *led);
+        static bool manualPower(bool enabled, uint8_t pin, WidgetLED *led);
 
 };
 
