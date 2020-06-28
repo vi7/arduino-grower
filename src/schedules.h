@@ -13,7 +13,7 @@
 const schedule LAMP_ON_SCHEDULE = {
   0,    // sec
   0,    // min
-  18,   // hour
+  20,   // hour
   8,    // day
   3,    // month
   2020, // year
@@ -82,7 +82,7 @@ const schedule HUM_OFF_SCHEDULE = {
  *  - Qmax 240L/H(66ml/s)
  *  - Qreal 180L/H(50ml/s) - highly depends on the environment like pipe length etc.
  *
- * 
+ *
  *  est water amount: 250ml - time in seconds
  */
 const uint8_t WATER_DURATION = 5;
