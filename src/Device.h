@@ -32,7 +32,7 @@ class Device {
 
         void scheduledPowerOff(Scheduler scheduler);
 
-        String status();
+        virtual String status();
 
 };
 
