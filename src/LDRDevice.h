@@ -19,10 +19,6 @@ class LDRDevice: public Device {
 
         void lampStatus();
 
-        void powerOn();
-
-        void powerOff();
-
         String status();
         
     private:
