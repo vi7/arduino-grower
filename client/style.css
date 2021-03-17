@@ -5,3 +5,7 @@ h1 {
 body {
     background-color: beige;
 }
+
+.vertical-align-none {
+    vertical-align: baseline;
+}

@@ -9,7 +9,7 @@
     <link href="style.css" rel="stylesheet">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script type="text/javascript" src="script.js"></script>
+    <script src="script.js" type="text/javascript"></script>
 
     <title>Arduino grower</title>
 </head>
@@ -21,59 +21,90 @@
 
     <div class="input-group mb-3 col-sm-8 mx-auto">
         <!--todo validation by pattern-->
-        <input id="ip-input" aria-describedby="button-addon1" class="form-control" type="text">
+        <input aria-describedby="button-addon1" class="form-control" id="ip-input" type="text">
         <div class="input-group-append">
-            <button class="btn btn-outline-secondary" id="button-addon1" type="button" onclick="refreshAll()">Refresh</button>
+            <button class="btn btn-outline-secondary" id="button-addon1" onclick="refreshAll()" type="button">Refresh
+            </button>
         </div>
     </div>
 
-   <div class="card-deck mb-3 text-center">
-       <div class="card mb-4 shadow-sm">
-           <div class="card-header">
-               <h4 class="my-0 font-weight-normal">Status</h4>
-           </div>
-           <div class="card-body">
-               <h4>Temperature: </h4>
-               <h1 class="card-title" id="temperature">N/A</h1>
-               <h4>Humidity: </h4>
-               <h1 class="card-title" id="humidity">N/A</h1>
-           </div>
-       </div>
+    <div class="card-deck mb-3 text-center">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Lamp power</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title" id="lamp-power-status">N/A</h1>
+                <button class="btn btn-lg btn-block btn-outline-primary" onclick="powerOn('lamp')" type="button">ON
+                </button>
+                <button class="btn btn-lg btn-block btn-outline-primary" onclick="powerOff('lamp')" type="button">OFF
+                </button>
+            </div>
+        </div>
 
-       <div class="card mb-4 shadow-sm">
-           <div class="card-header">
-               <h4 class="my-0 font-weight-normal">Lamp power</h4>
-           </div>
-           <div class="card-body">
-               <h1 class="card-title" id="lamp-power-status">N/A</h1>
-               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOn('lamp')">ON</button>
-               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOff('lamp')">OFF</button>
-           </div>
-       </div>
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Fan power</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title" id="fan-power-status">N/A</h1>
+                <button class="btn btn-lg btn-block btn-outline-primary" onclick="powerOn('fan')" type="button">ON
+                </button>
+                <button class="btn btn-lg btn-block btn-outline-primary" onclick="powerOff('fan')" type="button">OFF
+                </button>
+            </div>
+        </div>
 
-       <div class="card mb-4 shadow-sm">
-           <div class="card-header">
-               <h4 class="my-0 font-weight-normal">Fan power</h4>
-           </div>
-           <div class="card-body">
-               <h1 class="card-title" id="fan-power-status">N/A</h1>
-               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOn('fan')">ON</button>
-               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOff('fan')">OFF</button>
-           </div>
-       </div>
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Humidifier power</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title" id="hum-power-status">N/A</h1>
+                <button class="btn btn-lg btn-block btn-outline-primary" onclick="powerOn('hum')" type="button">ON
+                </button>
+                <button class="btn btn-lg btn-block btn-outline-primary" onclick="powerOff('hum')" type="button">OFF
+                </button>
+            </div>
+        </div>
 
-       <div class="card mb-4 shadow-sm">
-           <div class="card-header">
-               <h4 class="my-0 font-weight-normal">Humidifier power</h4>
-           </div>
-           <div class="card-body">
-               <h1 class="card-title" id="hum-power-status">N/A</h1>
-               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOn('hum')">ON</button>
-               <button type="button" class="btn btn-lg btn-block btn-outline-primary" onclick="powerOff('hum')">OFF</button>
-           </div>
-       </div>
+    </div>
 
-   </div>
+    <div class="card-deck mb-3 text-center">
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Lamp</h4>
+                <!--            TODO add refresh icon-->
+            </div>
+            <div class="card-body">
+                <h4>Brightness (between 0 and 255): </h4>
+                <img class="vertical-align-none" src="images/dark_icon.png">
+                <input disabled id="brightness1" max="255" min="0" name="brightness" type="range">
+                <img class="vertical-align-none" src="images/light_icon.png">
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Status</h4>
+            </div>
+            <div class="card-body">
+                <h4>Temperature: </h4>
+                <h1 class="card-title" id="temperature">N/A</h1>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Status</h4>
+            </div>
+            <div class="card-body">
+                <h4>Humidity: </h4>
+                <h1 class="card-title" id="humidity">N/A</h1>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 </html>
