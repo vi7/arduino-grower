@@ -32,12 +32,7 @@ void LDRDevice::lampStatus() {
 }
 
 
-void LDRDevice::powerOn() {
-}
-
-void LDRDevice::powerOff() {
-}
-
 String LDRDevice::status() {
-    return "";
+    uint8_t ledBrightness = map(getLightValue(), 0, 1023, 255, 0);
+    return "{\"brightness\":\"" + String(ledBrightness) +"\"}";
 }

@@ -70,7 +70,6 @@ const endpoint WATER_STATUS = {
 
 endpoint WATER_ENDPOINTS[] = {WATER_STATUS};
 
-// TODO merge and checnge frontend
 const endpoint TEMP_STATUS = {
     "/v2/dht/temperature",
     DEVICE_STATUS
@@ -83,5 +82,11 @@ const endpoint HUM_STATUS = {
 
 endpoint DHT_ENDPOINTS[] = {TEMP_STATUS, HUM_STATUS};
 
+
+const endpoint LDR_STATUS = {
+    "/v2/ldr/brightness",
+    DEVICE_STATUS
+};
+endpoint LDR_ENDPOINTS[] = {LDR_STATUS};
 
 #endif

@@ -41,17 +41,6 @@ function refreshPowerStatus(device) {
     });
 }
 
-function showPowerStat(device, result) {
-    let powerControl = document.getElementById(device + "-power-status");
-    if (result.power === "1") {
-        powerControl.innerHTML = "ON";
-        powerControl.style.color = "green";
-    } else {
-        powerControl.innerHTML = "OFF";
-        powerControl.style.color = "red"
-    }
-}
-
 function powerOn(device) {
     $.ajax({
         type: "GET",
@@ -74,12 +63,37 @@ function powerOff(device) {
     });
 }
 
+
+function refreshBrightness() {
+    $.ajax({
+        type: "GET",
+        url: getIP() + "/v2/ldr/brightness",
+        dataType: "json",
+        success: function (result) {
+            $("#brightness1")[0].value = result.brightness
+        }
+    });
+}
+
+
+function showPowerStat(device, result) {
+    let powerControl = document.getElementById(device + "-power-status");
+    if (result.power === "1") {
+        powerControl.innerHTML = "ON";
+        powerControl.style.color = "green";
+    } else {
+        powerControl.innerHTML = "OFF";
+        powerControl.style.color = "red"
+    }
+}
+
 function refreshAll() {
     refreshTemperature();
     refreshHumidity();
     refreshPowerStatus("lamp");
     refreshPowerStatus("fan");
     refreshPowerStatus("hum");
+    refreshBrightness();
 }
 
 $(document).ready(function () {
