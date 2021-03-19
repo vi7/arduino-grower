@@ -8,7 +8,7 @@
 #include <Arduino.h>
 #include <DHTesp.h>
 #include "Device.h"
-#include "BlynkManager.h"
+// #include "BlynkManager.h"
 
 class DHTDevice: public Device {
 
@@ -19,7 +19,7 @@ class DHTDevice: public Device {
 
         void init(uint8_t pin, uint8_t blynkTempPin);
 
-        void init(uint8_t pin, uint8_t blynkTempPin, uint8_t blynkRhPin); 
+        void init(uint8_t pin, uint8_t blynkTempPin, uint8_t blynkRhPin);
 
         void tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS);
 

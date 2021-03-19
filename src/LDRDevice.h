@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 #include "Device.h"
-#include "BlynkManager.h"
+// #include "BlynkManager.h"
 
 // LDR sensor values. The lower value is the brighter is light.
 const uint8_t LAMP_ON_VALUE = 200;
@@ -20,7 +20,7 @@ class LDRDevice: public Device {
         void lampStatus();
 
         String status();
-        
+
     private:
 
         uint16_t getLightValue();

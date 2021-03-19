@@ -64,7 +64,7 @@ WebServer server(80);
 Device lamp, fan, hum;
 WaterDevice waterDevice;
 DHTDevice dht;
-LDRDevice ldr; 
+LDRDevice ldr;
 
 Scheduler waterScheduler;
 Scheduler lampOnScheduler, lampOffScheduler;
@@ -110,7 +110,7 @@ void setup() {
   Serial.println(F("************\n\n"));
 
   initWiFi(WIFI_SSID, WIFI_PSK);
-  BlynkManager::init(BLYNK_LCDPIN);
+  // BlynkManager::init(BLYNK_LCDPIN);
   dht.init(DHTPIN, BLYNK_GRAPHTEMPPIN, BLYNK_GRAPHRHPIN);
   ldr.init(LDRPIN, BLYNK_LAMPBRLEDPIN);
 
@@ -124,7 +124,7 @@ void setup() {
   timer.setInterval(dht.dhtReadInterval, []{dht.tempDataHandler(&lamp, MAX_TEMP, TEMP_HYSTERESIS);});
   timer.setInterval(dht.dhtReadInterval, []{dht.rhDataHandler(&hum, MAX_RH, RH_HYSTERESIS);});
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, []{ldr.lampStatus();});
-  timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, BlynkManager::ensureBlynkConnection);
+  // timer.setInterval(BLYNK_CHECK_INTERVAL * 1000, BlynkManager::ensureBlynkConnection);
 
 
   lampOnScheduler.init([]{lamp.scheduledPowerOn(lampOnScheduler);}, LAMP_ON_SCHEDULE);
@@ -156,7 +156,7 @@ void setup() {
 /****************/
 void loop() {
 
-  Blynk.run();
+  // Blynk.run();
   timer.run();
   ezt::events();
   server.handleClient();
