@@ -37,7 +37,7 @@ void DHTDevice::tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_H
   }
   temp = currTemp;
   PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, device->pin, device->led);
-  BlynkManager::sendTempToBlynk(temp, blynkTempPin);
+  // BlynkManager::sendTempToBlynk(temp, blynkTempPin);
 }
 
 void DHTDevice::rhDataHandler(Device* device, uint8_t MAX_RH, uint8_t RH_HYSTERESIS) {
@@ -50,7 +50,7 @@ void DHTDevice::rhDataHandler(Device* device, uint8_t MAX_RH, uint8_t RH_HYSTERE
   }
   rH = currRH;
   PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, device->pin, device->led);
-  BlynkManager::sendRhToBlynk(rH, blynkRhPin);
+  // BlynkManager::sendRhToBlynk(rH, blynkRhPin);
 }
 
 void DHTDevice::powerOn() {

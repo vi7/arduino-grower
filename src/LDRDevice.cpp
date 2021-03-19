@@ -28,7 +28,7 @@ void LDRDevice::lampStatus() {
     Serial.println(F("LDR sensor: lamp is off"));
     isPowerOn = false;
   }
-  BlynkManager::sendLampToBlynk(ledBrightness, led);
+  // BlynkManager::sendLampToBlynk(ledBrightness, led);
 }
 
 

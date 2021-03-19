@@ -8,8 +8,8 @@
 #include <Arduino.h>
 #include <DHTesp.h>
 #include "Device.h"
-#include "BlynkManager.h"
 #include "MetricsCollectable.h"
+// #include "BlynkManager.h"
 
 #define DHT_MODEL DHTesp::DHT22
 #define DHT_NAME "DHT22"
