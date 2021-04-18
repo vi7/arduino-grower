@@ -9,8 +9,12 @@
 #include <DHTesp.h>
 #include "Device.h"
 // #include "BlynkManager.h"
+#include "MetricsCollectable.h"
 
-class DHTDevice: public Device {
+#define DHT_MODEL DHTesp::DHT22
+#define DHT_NAME "DHT22"
+
+class DHTDevice: public Device, MetricsCollectable {
 
     public:
         uint16_t blynkTempPin, blynkRhPin;
@@ -31,8 +35,24 @@ class DHTDevice: public Device {
 
         String status();
 
+        void collect(String *metrics);
+
+        uint32_t getTempReadErrs() { return this->_tempReadErrs; }
+
+        uint32_t getRHReadErrs() { return this->_rHReadErrs; }
+
     private:
         DHTesp dht;
+        String _metrics;
+        uint32_t _tempReadErrs = 0, _rHReadErrs = 0;
+
+        bool metricReady();
+        void metricTemp();
+        void metricHumidity();
+        void metricHeatIndex();
+        void metricPerception();
+        void metricTempReadErr();
+        void metricHumidityReadErr();
 };
 
 #endif

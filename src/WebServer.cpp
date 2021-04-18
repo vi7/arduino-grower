@@ -36,6 +36,6 @@ void WebServer::registerEndpoint(Device *device, endpoint endpoints[], int size)
 
 void WebServer::sendReply(const String &content)
 {
-  this->sendHeader("Access-Control-Allow-Origin", "*");
+  this->enableCORS(true);
   this->send(200, "application/json", content);
 }

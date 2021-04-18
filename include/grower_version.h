@@ -11,7 +11,7 @@
 #ifndef GROWER_VERSION_H
 #define GROWER_VERSION_H
 
-const char GROWER_VERSION[] = "0.8.0-beta1-noblynk";
+const char GROWER_VERSION[] = "0.8.0-beta2-prom";
 // Example version with appended build version (autoincrementing part):
 // const char VERSION[] = "0.4.0-230498"
 
