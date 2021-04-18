@@ -22,6 +22,8 @@
 #include "WaterDevice.h"
 #include "DHTDevice.h"
 #include "LDRDevice.h"
+#include "MetricsExporter.h"
+#include "MetricsCollectable.h"
 
 /*
  * include secrets and credentials
@@ -70,6 +72,8 @@ Scheduler waterScheduler;
 Scheduler lampOnScheduler, lampOffScheduler;
 Scheduler fanOnScheduler, fanOffScheduler;
 Scheduler humOnScheduler, humOffScheduler;
+
+MetricsExporter dhtDeviceExporter((ESP8266WebServer*)&server, (MetricsCollectable*)&dht);
 
 
 /**************************/
@@ -146,6 +150,8 @@ void setup() {
   server.registerEndpoint(&waterDevice, WATER_ENDPOINTS, sizeof(WATER_ENDPOINTS)/sizeof(WATER_ENDPOINTS[0]));
   server.registerEndpoint(&dht, DHT_ENDPOINTS, sizeof(DHT_ENDPOINTS)/sizeof(DHT_ENDPOINTS[0]));
   server.registerEndpoint(&ldr, LDR_ENDPOINTS, sizeof(LDR_ENDPOINTS)/sizeof(LDR_ENDPOINTS[0]));
+
+
 
   server.begin();
 
