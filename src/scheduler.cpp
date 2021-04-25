@@ -4,25 +4,6 @@
 
 #include "scheduler.h"
 
-Scheduler::Scheduler() {
-};
-
-void Scheduler::init(void (*function)(), schedule schedule, String *location) {
-  this->function = function;
-
-  startSec = schedule.sec;
-  startMin = schedule.min;
-  startHr = schedule.hr;
-  startDay = schedule.day;
-  startMnth = schedule.mnth;
-  startYear = schedule.year;
-  intervalDays = schedule.intervalDays;
-
-  this->_tz = new Timezone();
-  initTimezone(location);
-  setNextEvent();
-}
-
 time_t Scheduler::getStartUnixTime() {
   return makeTime(startHr, startMin, startSec, startDay, startMnth, startYear);
 }

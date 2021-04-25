@@ -27,9 +27,22 @@ public:
   uint16_t startYear;
   uint8_t intervalDays;
 
-  Scheduler();
+  Scheduler(){};
 
-  void init(void (*function)(), schedule, String* = new String(DEFAULT_LOCATION));
+// TODO: replace start* fields with startUnixTime field initialized in constructor. 
+  Scheduler(void (*function)(), schedule schedule, String* location = new String(DEFAULT_LOCATION)):
+     function(function),
+     startSec(schedule.sec),
+     startMin(schedule.min),
+     startHr(schedule.hr),
+     startDay(schedule.day),
+     startMnth(schedule.mnth),
+     startYear(schedule.year),
+     intervalDays(schedule.intervalDays) {
+         this->_tz = new Timezone();
+         initTimezone(location);
+         setNextEvent();
+     };
 
   time_t getStartUnixTime();
   time_t getNextUnixTime();

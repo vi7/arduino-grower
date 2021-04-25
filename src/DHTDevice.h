@@ -9,7 +9,6 @@
 #include <DHTesp.h>
 #include "Device.h"
 #include "MetricsCollectable.h"
-// #include "BlynkManager.h"
 
 #define DHT_MODEL DHTesp::DHT22
 #define DHT_NAME "DHT22"
@@ -17,13 +16,10 @@
 class DHTDevice: public Device, MetricsCollectable {
 
     public:
-        uint16_t blynkTempPin, blynkRhPin;
         uint16_t dhtReadInterval;
         float temp, rH;
 
-        void init(uint8_t pin, uint8_t blynkTempPin);
-
-        void init(uint8_t pin, uint8_t blynkTempPin, uint8_t blynkRhPin);
+        DHTDevice(uint8_t pin);
 
         void tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS);
 
