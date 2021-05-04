@@ -5,29 +5,22 @@
 
 #include "PowerManager.h"
 
-
-void PowerManager::autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin, WidgetLED *led) {
+void PowerManager::autoPower(bool *autoControl, bool *currentState, float *currVal, float maxVal, float valHyst, uint8_t pin) {
   if (!*autoControl) return;
-  if (*currVal >= maxVal && *isOn) {
-    *isOn = manualPower(false, pin, led);
+  if (*currVal >= maxVal && *currentState) {
+    *currentState = manualPowerOff(pin);
   }
-  else if (*currVal < maxVal - valHyst && !*isOn) {
-    *isOn = manualPower(true, pin, led);
+  else if (*currVal < maxVal - valHyst && !*currentState) {
+    *currentState = manualPowerOn(pin);
   }
 }
 
-bool PowerManager::manualPower(bool enabled, uint8_t pin, WidgetLED *led) {
-  bool isOn;
-  if (enabled) {
-    digitalWrite(pin, RELAY_ON);
-    isOn = true;
-    Serial.println("Blynk: enabling led for pin: " + String(pin));
-    led->on();
-  } else {
-    digitalWrite(pin, RELAY_OFF);
-    isOn = false;
-    Serial.println("Blynk: disabling led for pin: " + String(pin));
-    led->off();
-  }
-  return isOn;
+bool PowerManager::manualPowerOn(uint8_t pin) {
+  digitalWrite(pin, RELAY_ON);
+  return true;
+}
+
+bool PowerManager::manualPowerOff(uint8_t pin) {
+  digitalWrite(pin, RELAY_OFF);
+  return false;
 }

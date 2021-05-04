@@ -10,16 +10,13 @@
 #define RELAY_OFF HIGH
 
 #include <Arduino.h>
-#include <BlynkSimpleEsp8266_SSL.h>
 
 class PowerManager {
     public:
-        
-        static void autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin, WidgetLED *led);
-
-        static bool manualPower(bool enabled, uint8_t pin, WidgetLED *led);
+        static void autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin);
+        static bool manualPowerOn(uint8_t pin);
+        static bool manualPowerOff(uint8_t pin);
 
 };
-
 
 #endif
