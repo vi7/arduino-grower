@@ -19,7 +19,13 @@ class DHTDevice: public Device, MetricsCollectable {
         uint16_t dhtReadInterval;
         float temp, rH;
 
-        DHTDevice(uint8_t pin);
+        DHTDevice(uint8_t pin){
+            this->_pin = pin;
+            pinMode(pin, INPUT_PULLUP);
+            dht.setup(pin, DHT_MODEL);
+            dhtReadInterval = (dht.getMinimumSamplingPeriod());
+            Serial.printf((char *)F("DHT sensor read interval is: %ums\n"), dhtReadInterval);
+        }
 
         void tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS);
 

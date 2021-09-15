@@ -12,14 +12,14 @@
 class Device {
 
     public:
-        uint8_t pin; 
+        uint8_t _pin; 
         bool isPowerOn;
         bool isAutoPowerOn;
 
         Device(){};
 
         Device(uint8_t pin):
-         pin(pin),
+         _pin(pin),
          isAutoPowerOn(true) {
             pinMode(pin, OUTPUT);
             this->isPowerOn = PowerManager::manualPowerOn(pin);

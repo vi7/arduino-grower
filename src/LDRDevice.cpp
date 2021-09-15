@@ -5,7 +5,7 @@
 #include "LDRDevice.h"
 
 uint16_t LDRDevice::getLightValue() {
-  return analogRead(pin);
+  return analogRead(_pin);
 }
 
 void LDRDevice::lampStatus() {

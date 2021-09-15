@@ -16,7 +16,7 @@ class LDRDevice: public Device {
     public:
 
         LDRDevice(uint8_t pin) {
-            this->pin = pin;
+            this->_pin = pin;
             uint16_t lightVal = getLightValue();
             this->isPowerOn = lightVal < LAMP_ON_VALUE ? true : false;
          };

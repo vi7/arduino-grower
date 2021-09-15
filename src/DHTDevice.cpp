@@ -4,14 +4,6 @@
 
 #include "DHTDevice.h"
 
-DHTDevice::DHTDevice(uint8_t pin) {
-  this->pin=pin;
-  pinMode(pin, INPUT_PULLUP);
-  dht.setup(pin, DHT_MODEL);
-  dhtReadInterval = (dht.getMinimumSamplingPeriod());
-  Serial.printf((char*)F("DHT sensor read interval is: %ums\n"), dhtReadInterval);
-}
-
   /************ LOGGING ************/
   // TODO: candidate for debug logging
   // Serial.print("DHT " + String(dht.getStatusString()));
@@ -29,7 +21,7 @@ void DHTDevice::tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_H
     Serial.printf((char*)F("DHT: Failed to read temperature! Device status: %s\n"), dht.getStatusString());
     return;
   }
-  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, this->pin);
+  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, this->_pin);
 }
 
 void DHTDevice::rhDataHandler(Device* device, uint8_t MAX_RH, uint8_t RH_HYSTERESIS) {
@@ -39,7 +31,7 @@ void DHTDevice::rhDataHandler(Device* device, uint8_t MAX_RH, uint8_t RH_HYSTERE
     Serial.printf((char*)F("DHT: Failed to read humidity! Device status: %s\n"), dht.getStatusString());
     return;
   }
-  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, this->pin);
+  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, this->_pin);
 }
 
 String DHTDevice::status() {

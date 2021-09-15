@@ -112,7 +112,11 @@ void setup() {
   // Serial.print(F("[MAIN] [D] Next watering scheduled on: "));
   // Serial.println(waterScheduler.getNextDateTime());
 
-  waterScheduler = Scheduler([]{waterDevice.scheduledWater(waterScheduler, []{waterDevice.powerOff();});}, WATER_SCHEDULE);
+  waterScheduler = Scheduler([]{
+    waterDevice.scheduledWater(
+      waterScheduler, []{waterDevice.powerOff();}
+    );
+  }, WATER_SCHEDULE);
   lampOnScheduler = Scheduler([]{lamp.scheduledPowerOn(lampOnScheduler);}, LAMP_ON_SCHEDULE);
   lampOffScheduler = Scheduler([]{lamp.scheduledPowerOff(lampOffScheduler);}, LAMP_OFF_SCHEDULE);
   fanOnScheduler = Scheduler([]{fan.scheduledPowerOn(fanOnScheduler);}, FAN_ON_SCHEDULE);

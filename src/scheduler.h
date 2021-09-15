@@ -35,7 +35,7 @@ public:
          startUnixTime = makeTime(schedule.hr, schedule.min, schedule.sec, schedule.day, schedule.mnth, schedule.year);
          initTimezone(location);
          setNextEvent();
-         Serial.println("Scheduler initialized with start time" + getStartDateTime());
+         Serial.println("Scheduler initialized with start time " + getStartDateTime());
   };
 
   time_t getNextUnixTime();

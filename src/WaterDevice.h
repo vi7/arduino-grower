@@ -7,8 +7,6 @@
 
 #define PUMP_ON HIGH
 #define PUMP_OFF LOW
-#define PUMPPIN D2
-
 
 #include <Arduino.h>
 #include <SimpleTimer.h>
@@ -21,7 +19,11 @@ extern SimpleTimer timer;
 class WaterDevice: public Device {
     public:
 
-        WaterDevice(uint8_t pin);
+        WaterDevice(uint8_t pin) {
+            this->_pin = pin;
+            pinMode(pin, OUTPUT);
+            digitalWrite(pin, PUMP_OFF);
+        };
 
         void powerOn();
 

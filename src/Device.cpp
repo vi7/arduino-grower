@@ -5,12 +5,12 @@
 #include "Device.h"
 
 void Device::powerOn() {
-    this->isPowerOn = PowerManager::manualPowerOn(pin);
+    this->isPowerOn = PowerManager::manualPowerOn(_pin);
     this->isAutoPowerOn = true;
 }
 
 void Device::powerOff() {
-    this->isPowerOn = PowerManager::manualPowerOff(pin);
+    this->isPowerOn = PowerManager::manualPowerOff(_pin);
     this->isAutoPowerOn = false;
 }
 

@@ -4,23 +4,15 @@
 
 #include "WaterDevice.h"
 
-WaterDevice::WaterDevice(uint8_t pin) {
-  this->pin = pin;
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, PUMP_OFF);
-};
-
 void WaterDevice::powerOn() {
-  digitalWrite(PUMPPIN, PUMP_ON);
-  Serial.println(F("[MAIN] [I] Pump is on"));
+  digitalWrite(_pin, PUMP_ON);
+  Serial.println(F("Pump is on"));
 }
-
 
 void WaterDevice::powerOff() {
-  digitalWrite(PUMPPIN, PUMP_OFF);
-  Serial.println(F("[MAIN] [I] Pump is off"));
+  digitalWrite(_pin, PUMP_OFF);
+  Serial.println(F("Pump is off"));
 }
-
 
 void WaterDevice::water(timer_callback pumpOffFunc) {
   this->powerOn();
