@@ -4,19 +4,6 @@
 
 #include "DHTDevice.h"
 
-void DHTDevice::init(uint8_t pin, uint8_t blynkTempPin) {
-  pinMode(pin, INPUT_PULLUP);
-  dht.setup(pin, DHT_MODEL);
-  dhtReadInterval = (dht.getMinimumSamplingPeriod());
-  Serial.printf((char*)F("DHT sensor read interval is: %u\n"), dhtReadInterval);
-}
-
-void DHTDevice::init(uint8_t pin, uint8_t blynkTempPin, uint8_t blynkRhPin) {
-  init(pin, blynkTempPin);
-  this->blynkTempPin = blynkTempPin;
-  this->blynkRhPin = blynkRhPin;
-};
-
   /************ LOGGING ************/
   // TODO: candidate for debug logging
   // Serial.print("DHT " + String(dht.getStatusString()));
@@ -28,37 +15,23 @@ void DHTDevice::init(uint8_t pin, uint8_t blynkTempPin, uint8_t blynkRhPin) {
   // Serial.println(rH);
   /************  END LOGGING ************/
 void DHTDevice::tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS) {
-  float currTemp;
-  currTemp = dht.getTemperature();
-  if (isnan(currTemp)) {
+  temp = dht.getTemperature();
+  if (isnan(temp)) {
     _tempReadErrs++;
-    Serial.printf((char*)F("DHT: Failed to read temperature!\n\tcurrent value:\t\t\t%f\n\tlast valid value:\t\t%f\n"), currTemp, temp);
+    Serial.printf((char*)F("DHT: Failed to read temperature! Device status: %s\n"), dht.getStatusString());
     return;
   }
-  temp = currTemp;
-  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, device->pin, device->led);
-  BlynkManager::sendTempToBlynk(temp, blynkTempPin);
+  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, this->_pin);
 }
 
 void DHTDevice::rhDataHandler(Device* device, uint8_t MAX_RH, uint8_t RH_HYSTERESIS) {
-  float currRH;
-  currRH = dht.getHumidity();
-  if (isnan(currRH)) {
+  rH = dht.getHumidity();
+  if (isnan(rH)) {
     _rHReadErrs++;
-    Serial.printf((char*)F("DHT: Failed to read humidity!\n\tcurrent value:\t\t\t%f\n\tlast valid value:\t\t%f\n"), currRH, rH);
+    Serial.printf((char*)F("DHT: Failed to read humidity! Device status: %s\n"), dht.getStatusString());
     return;
   }
-  rH = currRH;
-  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, device->pin, device->led);
-  BlynkManager::sendRhToBlynk(rH, blynkRhPin);
-}
-
-void DHTDevice::powerOn() {
-
-}
-
-void DHTDevice::powerOff() {
-
+  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, this->_pin);
 }
 
 String DHTDevice::status() {

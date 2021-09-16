@@ -8,7 +8,6 @@
 #include <Arduino.h>
 #include <DHTesp.h>
 #include "Device.h"
-#include "BlynkManager.h"
 #include "MetricsCollectable.h"
 
 #define DHT_MODEL DHTesp::DHT22
@@ -17,13 +16,16 @@
 class DHTDevice: public Device, MetricsCollectable {
 
     public:
-        uint16_t blynkTempPin, blynkRhPin;
         uint16_t dhtReadInterval;
         float temp, rH;
 
-        void init(uint8_t pin, uint8_t blynkTempPin);
-
-        void init(uint8_t pin, uint8_t blynkTempPin, uint8_t blynkRhPin);
+        DHTDevice(uint8_t pin){
+            this->_pin = pin;
+            pinMode(pin, INPUT_PULLUP);
+            dht.setup(pin, DHT_MODEL);
+            dhtReadInterval = (dht.getMinimumSamplingPeriod());
+            Serial.printf((char *)F("DHT sensor read interval is: %ums\n"), dhtReadInterval);
+        }
 
         void tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS);
 

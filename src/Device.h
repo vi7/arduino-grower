@@ -6,23 +6,24 @@
 #define DEVICE_H
 
 #include <Arduino.h>
-#include <BlynkSimpleEsp8266_SSL.h>
 #include "PowerManager.h"
 #include "scheduler.h"
 
 class Device {
 
     public:
-
-        Device();
-
-        uint8_t pin; 
-        uint8_t blynkPin;
-        WidgetLED *led;
+        uint8_t _pin; 
         bool isPowerOn;
         bool isAutoPowerOn;
 
-        void init(uint8_t pin, uint8_t blynkPin);
+        Device(){};
+
+        Device(uint8_t pin):
+         _pin(pin),
+         isAutoPowerOn(true) {
+            pinMode(pin, OUTPUT);
+            this->isPowerOn = PowerManager::manualPowerOn(pin);
+        };
 
         void powerOn();
 

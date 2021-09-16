@@ -23,15 +23,21 @@ typedef struct {
 class Scheduler {
 public:
   void (*function)();
-  uint8_t startSec, startMin, startHr, startDay, startMnth;
-  uint16_t startYear;
   uint8_t intervalDays;
+  time_t startUnixTime;
 
-  Scheduler();
+  Scheduler(){};
 
-  void init(void (*function)(), schedule, String* = new String(DEFAULT_LOCATION));
+  Scheduler(void (*function)(), schedule schedule, String* location = new String(DEFAULT_LOCATION)):
+     function(function),
+     intervalDays(schedule.intervalDays) {
+         this->_tz = new Timezone();
+         startUnixTime = makeTime(schedule.hr, schedule.min, schedule.sec, schedule.day, schedule.mnth, schedule.year);
+         initTimezone(location);
+         setNextEvent();
+         Serial.println("Scheduler initialized with start time " + getStartDateTime());
+  };
 
-  time_t getStartUnixTime();
   time_t getNextUnixTime();
 
   /*

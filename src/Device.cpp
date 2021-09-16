@@ -4,36 +4,23 @@
 
 #include "Device.h"
 
-Device::Device() {
-};
-
-void Device::init(uint8_t pin, uint8_t blynkPin) {
-    this->pin = pin;
-    this->led = new WidgetLED(blynkPin);
-
-    pinMode(pin, OUTPUT);
-
-    isPowerOn = PowerManager::manualPower(true, pin, led);
-    isAutoPowerOn = true;
-};
-
 void Device::powerOn() {
-    isPowerOn = PowerManager::manualPower(true, pin, led);
-    isAutoPowerOn = true;
+    this->isPowerOn = PowerManager::manualPowerOn(_pin);
+    this->isAutoPowerOn = true;
 }
 
 void Device::powerOff() {
-    this->isPowerOn = PowerManager::manualPower(false, pin, led);
-    isAutoPowerOn = false;
+    this->isPowerOn = PowerManager::manualPowerOff(_pin);
+    this->isAutoPowerOn = false;
 }
 
 void Device::scheduledPowerOn(Scheduler scheduler) {
-    powerOn();
+    this->powerOn();
     scheduler.setNextEvent();
 }
 
 void Device::scheduledPowerOff(Scheduler scheduler) {
-    powerOff();
+    this->powerOff();
     scheduler.setNextEvent();
 }
 

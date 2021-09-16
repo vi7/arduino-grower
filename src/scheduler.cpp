@@ -4,36 +4,12 @@
 
 #include "scheduler.h"
 
-Scheduler::Scheduler() {
-};
-
-void Scheduler::init(void (*function)(), schedule schedule, String *location) {
-  this->function = function;
-
-  startSec = schedule.sec;
-  startMin = schedule.min;
-  startHr = schedule.hr;
-  startDay = schedule.day;
-  startMnth = schedule.mnth;
-  startYear = schedule.year;
-  intervalDays = schedule.intervalDays;
-
-  this->_tz = new Timezone();
-  initTimezone(location);
-  setNextEvent();
-}
-
-time_t Scheduler::getStartUnixTime() {
-  return makeTime(startHr, startMin, startSec, startDay, startMnth, startYear);
-}
-
 time_t Scheduler::getNextUnixTime() {
 
-  time_t t = getStartUnixTime();
+  time_t t = startUnixTime;
   time_t intervalDaySecs = intervalDays * SECS_PER_DAY;
 
-  while (t <= _tz->now())
-  {
+  while (t <= _tz->now()) {
     t += intervalDaySecs;
   }
 
@@ -41,7 +17,7 @@ time_t Scheduler::getNextUnixTime() {
 };
 
 String Scheduler::getStartDateTime(const String format) {
-  return _tz->dateTime(getStartUnixTime(), format);
+  return _tz->dateTime(startUnixTime, format);
 }
 
 String Scheduler::getNextDateTime(const String format) {
