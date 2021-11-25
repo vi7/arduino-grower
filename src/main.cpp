@@ -33,15 +33,17 @@
 #include "secrets.h"
 
 /*
- * !!! DO NOT USE pins D1,D2
+ * Device pins and wire colors
+ *
+ * !!! DO NOT USE pins D1(5),D2(4)
  * because they are reserved
  * for I2C bus SCL,SDA !!!
  */
-#define FANRELAYPIN D0
-#define LAMPRELAYPIN D3
-#define HUMRELAYPIN D4
-#define PUMPPIN D5
-#define LDRPIN A0
+#define FANRELAYPIN D0   // white
+#define LAMPRELAYPIN D3  // white/light-brown
+#define HUMRELAYPIN D4   // violet
+#define PUMPPIN D5       // blue
+#define LDRPIN A0        // dark-brown/blue
 
 /* monitoring constants */
 const uint8_t MAX_TEMP = 40;
