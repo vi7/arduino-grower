@@ -13,7 +13,7 @@
 const schedule LAMP_ON_SCHEDULE = {
   0,    // sec
   0,    // min
-  18,   // hour
+  22,   // hour
   8,    // day
   3,    // month
   2020, // year
@@ -23,7 +23,7 @@ const schedule LAMP_ON_SCHEDULE = {
 const schedule LAMP_OFF_SCHEDULE = {
   0,    // sec
   0,    // min
-  12,   // hour
+  18,   // hour
   8,    // day
   3,    // month
   2020, // year
@@ -34,7 +34,7 @@ const schedule LAMP_OFF_SCHEDULE = {
 const schedule FAN_ON_SCHEDULE = {
   0,    // sec
   1,    // min
-  18,   // hour
+  22,   // hour
   8,    // day
   3,    // month
   2020, // year
@@ -44,7 +44,7 @@ const schedule FAN_ON_SCHEDULE = {
 const schedule FAN_OFF_SCHEDULE = {
   0,    // sec
   1,    // min
-  12,   // hour
+  18,   // hour
   8,    // day
   3,    // month
   2020, // year
@@ -55,7 +55,7 @@ const schedule FAN_OFF_SCHEDULE = {
 const schedule HUM_ON_SCHEDULE = {
   0,    // sec
   2,    // min
-  18,   // hour
+  22,   // hour
   8,    // day
   3,    // month
   2020, // year
@@ -65,7 +65,7 @@ const schedule HUM_ON_SCHEDULE = {
 const schedule HUM_OFF_SCHEDULE = {
   0,    // sec
   2,    // min
-  12,   // hour
+  18,   // hour
   8,    // day
   3,    // month
   2020, // year
