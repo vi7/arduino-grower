@@ -25,7 +25,7 @@ Dependency libs are listed in the [platformio.ini](platformio.ini)
 ### Hardware
 
 - [Wemos D1 mini](https://wiki.wemos.cc/products:d1:d1_mini) or compatible clone (not recommended, genuine device is always better)
-- [DHT22 (AM2302) sensor](https://learn.adafruit.com/dht)
+- [HTU21D temp/humidity sensor](https://www.te.com/usa-en/product-CAT-HSC0004.html)
 - [Songle 230V relay switch](http://www.circuitbasics.com/wp-content/uploads/2015/11/5V-Relay-Pinout1.png)
 - [Omron 230V 2 channel solid state relay](https://hobbycomponents.com/2362-thickbox_default/5v-2-channel-240v-ac-solid-state-relay.jpg)
 - LDR sensor

@@ -27,8 +27,6 @@ void WaterDevice::scheduledWater(Scheduler scheduler, timer_callback pumpOffFunc
 String WaterDevice::status() {
 // TODO: generate from template using snprintf
 
-  // return "{\"date_time\":\"" + waterScheduler.getStartDateTime(ISO8601) +"\"," 
-  // + "\"date_time\":\"" + waterScheduler.getNextDateTime(ISO8601) + "\"," 
-  // + "\"days\":\"" + String(WATER_SCHEDULE.intervalDays) +"\","
-  // + "\"duration\":\"" + String(WATER_DURATION) +"\"}";
+  return "{\"days\":\"" + String(WATER_SCHEDULE.intervalDays) +"\","
+  + "\"duration\":\"" + String(WATER_DURATION) +"\"}";
 }
