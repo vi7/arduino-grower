@@ -14,9 +14,9 @@ const schedule LAMP_ON_SCHEDULE = {
   0,    // sec
   0,    // min
   22,   // hour
-  8,    // day
-  3,    // month
-  2020, // year
+  27,    // day
+  11,    // month
+  2021, // year
   1,    // interval in days
 };
 
@@ -24,9 +24,9 @@ const schedule LAMP_OFF_SCHEDULE = {
   0,    // sec
   0,    // min
   18,   // hour
-  8,    // day
-  3,    // month
-  2020, // year
+  27,    // day
+  11,    // month
+  2021, // year
   1,    // interval in days
 };
 
@@ -35,9 +35,9 @@ const schedule FAN_ON_SCHEDULE = {
   0,    // sec
   1,    // min
   22,   // hour
-  8,    // day
-  3,    // month
-  2020, // year
+  27,    // day
+  11,    // month
+  2021, // year
   1,    // interval in days
 };
 
@@ -45,9 +45,9 @@ const schedule FAN_OFF_SCHEDULE = {
   0,    // sec
   1,    // min
   18,   // hour
-  8,    // day
-  3,    // month
-  2020, // year
+  27,    // day
+  11,    // month
+  2021, // year
   1,    // interval in days
 };
 
@@ -56,9 +56,9 @@ const schedule HUM_ON_SCHEDULE = {
   0,    // sec
   2,    // min
   22,   // hour
-  8,    // day
-  3,    // month
-  2020, // year
+  27,    // day
+  11,    // month
+  2021, // year
   1,    // interval in days
 };
 
@@ -66,9 +66,9 @@ const schedule HUM_OFF_SCHEDULE = {
   0,    // sec
   2,    // min
   18,   // hour
-  8,    // day
-  3,    // month
-  2020, // year
+  27,    // day
+  11,    // month
+  2021, // year
   1,    // interval in days
 };
 

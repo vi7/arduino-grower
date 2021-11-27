@@ -1,17 +1,17 @@
 /**
  *  PowerManager.cpp
- */ 
+ */
 
 
 #include "PowerManager.h"
 
-void PowerManager::autoPower(bool *autoControl, bool *currentState, float *currVal, float maxVal, float valHyst, uint8_t pin) {
+void PowerManager::autoPower(bool *autoControl, bool *currentState, float *currVal, float maxVal, float valHyst, uint8_t *pin) {
   if (!*autoControl) return;
   if (*currVal >= maxVal && *currentState) {
-    *currentState = manualPowerOff(pin);
+    *currentState = manualPowerOff(*pin);
   }
   else if (*currVal < maxVal - valHyst && !*currentState) {
-    *currentState = manualPowerOn(pin);
+    *currentState = manualPowerOn(*pin);
   }
 }
 
