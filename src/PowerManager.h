@@ -13,7 +13,7 @@
 
 class PowerManager {
     public:
-        static void autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t pin);
+        static void autoPower(bool *autoControl, bool *isOn, float *currVal, float maxVal, float valHyst, uint8_t *pin);
         static bool manualPowerOn(uint8_t pin);
         static bool manualPowerOff(uint8_t pin);
 

@@ -21,7 +21,7 @@ void DHTDevice::tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_H
     Serial.printf((char*)F("DHT: Failed to read temperature! Device status: %s\n"), dht.getStatusString());
     return;
   }
-  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, this->_pin);
+  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, &device->_pin);
 }
 
 void DHTDevice::rhDataHandler(Device* device, uint8_t MAX_RH, uint8_t RH_HYSTERESIS) {
@@ -31,7 +31,7 @@ void DHTDevice::rhDataHandler(Device* device, uint8_t MAX_RH, uint8_t RH_HYSTERE
     Serial.printf((char*)F("DHT: Failed to read humidity! Device status: %s\n"), dht.getStatusString());
     return;
   }
-  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, this->_pin);
+  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, &device->_pin);
 }
 
 String DHTDevice::status() {

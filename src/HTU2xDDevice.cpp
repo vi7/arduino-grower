@@ -18,7 +18,7 @@ void HTU2xDDevice::tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEM
     htu2xD->setResolution(HUMD_12BIT_TEMP_14BIT);     //humidity 12-bit, temperature 14-bit
     return;
   }
-  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, this->_pin);
+  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &temp, MAX_TEMP, TEMP_HYSTERESIS, &device->_pin);
   // TODO: add delay(500) as in the HTU2xD_SHT2x_Si70xx lib example?
 }
 
@@ -29,7 +29,7 @@ void HTU2xDDevice::rhDataHandler(Device* device, uint8_t MAX_RH, uint8_t RH_HYST
     Serial.printf((char*)F("%s: Failed to read humidity! CRC8 or communication error occurred\n"), HTU2XD_NAME);
     return;
   }
-  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, this->_pin);
+  PowerManager::autoPower(&device->isAutoPowerOn, &device->isPowerOn, &rH, MAX_RH, RH_HYSTERESIS, &device->_pin);
 }
 
 String HTU2xDDevice::status() {
