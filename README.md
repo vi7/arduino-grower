@@ -39,6 +39,46 @@ Drawn by hand schematic is [here](resources/arduino-grower-schematic-by-hand.jpg
 Sofware configuration
 ---------------------
 
-[client](client) dir contains web client for the built-in web server and docker-compose for launching the nginx ready for serving this client.
+### Web client
+
+Deploy web client container to the host defined in the [.circleci/ci.env](.circleci/ci.env):
+```bash
+make client-deploy
+```
+
+Version of the client's Docker image will be by default taken from [include/version.h](include/version.h). To override the version:
+```bash
+make APP_VERSION=x.y.z client-deploy
+```
+
+### Prometheus metrics
 
 Prometheus metrics are available at the `/metrics` endpoint
+
+Development
+-----------
+
+### Web client
+
+Test the web client by building and running its Docker image locally:
+```bash
+make client-test
+```
+
+> In case of successfull test container will be stopped and removed automatically
+
+Build web client Docker image and run container locally without tests and automatic cleanup:
+```bash
+# After running 'make' web client will be available at http://localhost:8080
+make client-run
+```
+
+To stop and remove local web client container:
+```bash
+make client-rm
+```
+
+### Release process
+
+1. Set release version in the [include/version.h](include/version.h), commit and push to `master`, unless version bump was already delivered as a part of your changeset
+2. Run `make release`, this will tag the latest `master` with the release version and push to the upstream and then trigger CI jobs with compilation and web client Docker image release

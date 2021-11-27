@@ -1,11 +1,8 @@
 version: "2.2"
 services:
-
-  nginx:
-    image: nginx:1.16.0-alpine
-    volumes:
-      - /media/service/nginx-data:/usr/share/nginx/html:ro
-    restart: unless-stopped
+  client:
+    image: vi7al/iot-env:${APP_VERSION:-latest}
+    restart: always
     mem_limit: 256m
     ports:
       - "8080:80"
