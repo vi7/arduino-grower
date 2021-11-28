@@ -73,10 +73,10 @@ client-rm: ## Stop and remove web client container
 
 client-deploy: ## Deploy web client to the server. Pass APP_VERSION=x.y.z to override version
 	@echo 'deploying web client'
-	@docker-compose --project-name $(APP_NAME) \
+	@( APP_VERSION=$(APP_VERSION) docker-compose --project-name $(APP_NAME) \
 		--file client/docker-compose.yml \
 		--host "ssh://$(DEPLOY_USER)@$(DEPLOY_HOST)" \
-		up -d
+		up -d	)
 
 	@printf "\n\e[33mWeb client is available at http://$(DEPLOY_HOST):8080\e[0m\n"
 
