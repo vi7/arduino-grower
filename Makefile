@@ -73,11 +73,16 @@ client-rm: ## Stop and remove web client container
 
 client-deploy: ## Deploy web client to the server. Pass APP_VERSION=x.y.z to override version
 	@echo 'deploying web client'
-	@docker-compose --file client/docker-compose.yml --host "ssh://$(DEPLOY_USER)@$(DEPLOY_HOST)" up -d
+	@docker-compose --project-name $(APP_NAME) \
+		--file client/docker-compose.yml \
+		--host "ssh://$(DEPLOY_USER)@$(DEPLOY_HOST)" \
+		up -d
+
+	@printf "\n\e[33mWeb client is available at http://$(DEPLOY_HOST):8080\e[0m\n"
 
 	@printf "\n\e[33mTo interact with containers perform: 'export APP_VERSION=$(APP_VERSION)' \n\
 and use docker-compose like that: \n\
-'docker-compose --file client/docker-compose.yml --host "ssh://$(DEPLOY_USER)@$(DEPLOY_HOST)" <command>' \e[0m\n\n"
+'docker-compose -p $(APP_NAME) -f client/docker-compose.yml -H "ssh://$(DEPLOY_USER)@$(DEPLOY_HOST)" <command>' \e[0m\n\n"
 
 # RELEASE TASKS
 docker-release: build-nc push ## Build `{version}` and `latest` tagged Docker images and push'em to the registry
