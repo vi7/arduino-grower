@@ -9,7 +9,7 @@
 
 #include "scheduler.h"
 #include "schedules.h"
-#include "grower_version.h"
+#include "version.h"
 #include "WebServer.h"
 #include "endpoints.h"
 #include "Device.h"
@@ -110,7 +110,7 @@ void setup() {
   Serial.println(F("\n\n************"));
   Serial.printf("%s", BOARD_IDENTITY);
   Serial.println(F(" is up. Hey there!"));
-  Serial.printf("Firmware version: %s\n", GROWER_VERSION);
+  Serial.printf("Firmware version: %s\n", VERSION);
   Serial.println(F("************\n\n"));
 
   initWiFi(WIFI_SSID, WIFI_PSK);

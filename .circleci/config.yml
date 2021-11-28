@@ -1,0 +1,56 @@
+version: 2
+jobs:
+  # TODO: Move here compilation job from .travis.yml
+  client_test:
+    docker:
+      - image: alpine
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 20.10.7
+          docker_layer_caching: true
+      - run:
+          name: smoke-test
+          command: |
+            apk add --no-cache curl docker-cli make git
+            if [ "$(git log -1 --format=format:%H -- client/)" == "$CIRCLE_SHA1" ]
+            then
+             make client-test
+            else
+              printf "\e[33mNo changes for client. Skipping tests\e[0m\n"
+              exit 0
+            fi
+          no_output_timeout: 5m
+  release:
+    docker:
+      - image: alpine
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 20.10.7
+      - run:
+          name: Install packages
+          command: apk add --no-cache docker-cli make
+      - run:
+          name: Docker image release
+          command: |
+            docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD
+            make docker-release
+
+workflows:
+  version: 2
+  client_test-release:
+    jobs:
+      - client_test:
+          filters:
+            # Tag triggers are ignored by default and must be enabled explicitly
+            tags:
+              only: /^\d\.\d\.\d$/
+      - release:
+          requires:
+            - client_test
+          filters:
+            tags:
+              only: /^\d\.\d\.\d$/
+            branches:
+              ignore: /.*/
