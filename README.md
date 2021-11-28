@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/vi7/arduino-grower/tree/master.svg?style=svg)](https://circleci.com/gh/vi7/arduino-grower/tree/master)
+
 IoT environment control station
 ===============================
 
