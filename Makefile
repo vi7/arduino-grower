@@ -88,6 +88,7 @@ and use docker-compose like that: \n\
 docker-release: build-nc push ## Build `{version}` and `latest` tagged Docker images and push'em to the registry
 
 release: git-tag git-push ## Tag the latest master with version from include/version.h and push to the upstream
+	@printf "\n\e[33mCheck release status at https://app.circleci.com/pipelines/github/vi7/arduino-grower\e[0m\n"
 
 
 # HELPERS
