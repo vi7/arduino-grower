@@ -53,9 +53,11 @@ Version of the client's Docker image will be by default taken from [include/vers
 make APP_VERSION=x.y.z client-deploy
 ```
 
-### Prometheus metrics
+### Monitoring
 
 Prometheus metrics are available at the `/metrics` endpoint
+
+Example Grafana dashboard: [resources/grafana_dashboard.json](resources/grafana_dashboard.json)
 
 Development
 -----------
