@@ -78,7 +78,7 @@ client-deploy: ## Deploy web client to the server. Pass APP_VERSION=x.y.z to ove
 		--host "ssh://$(DEPLOY_USER)@$(DEPLOY_HOST)" \
 		up -d	)
 
-	@printf "\n\e[33mWeb client is available at http://$(DEPLOY_HOST):8080\e[0m\n"
+	@printf "\n\e[33mWeb client is available at http://$(DEPLOY_HOST):8081\e[0m\n"
 
 	@printf "\n\e[33mTo interact with containers perform: 'export APP_VERSION=$(APP_VERSION)' \n\
 and use docker-compose like that: \n\
