@@ -79,6 +79,7 @@ MetricsExporter htu2xDDeviceExporter((ESP8266WebServer*)&server, (MetricsCollect
 /**************************/
 void initWiFi(String SSID, String PSK) {
   WiFi.begin(SSID, PSK);
+  WiFi.enableSTA(true);
 
   Serial.print("Connecting to: " + SSID);
   while (WiFi.status() != WL_CONNECTED)
