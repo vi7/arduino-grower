@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include <DHTesp.h>
+#include "Settings.h"
 #include "Device.h"
 #include "MetricsCollectable.h"
 

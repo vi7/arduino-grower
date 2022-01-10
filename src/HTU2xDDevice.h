@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include <HTU2xD_SHT2x_Si70xx.h>
+#include "Settings.h"
 #include "Device.h"
 #include "MetricsCollectable.h"
 
