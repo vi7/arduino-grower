@@ -6,6 +6,15 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <SimpleTimer.h>
+#include <RCSwitch.h>
+
+#include "Settings.h"
+/*
+ * include secrets and credentials
+ * file should be created manually on a basis of "secrets.h.example"
+ * it'll be ignored by git
+ */
+#include "secrets.h"
 
 #include "scheduler.h"
 #include "schedules.h"
@@ -25,43 +34,19 @@
 #include "MetricsExporter.h"
 #include "MetricsCollectable.h"
 
-/*
- * include secrets and credentials
- * file should be created manually on a basis of "secrets.h.example"
- * it'll be ignored by git
- */
-#include "secrets.h"
-
-/*
- * Device pins and wire colors
- *
- * !!! DO NOT USE pins D1(5),D2(4)
- * because they are reserved
- * for I2C bus SCL,SDA !!!
- */
-#define FANRELAYPIN D0   // white
-#define LAMPRELAYPIN D3  // white/light-brown
-#define HUMRELAYPIN D4   // violet
-#define PUMPPIN D5       // blue
-#define LDRPIN A0        // dark-brown/blue
-
-/* monitoring constants */
-const uint8_t MAX_TEMP = 40;
-const uint8_t TEMP_HYSTERESIS = 10;
-// Recommended RH values:
-// - vegetative - 60%
-// - flowering - 50%
-const uint8_t MAX_RH = 50;
-const uint8_t RH_HYSTERESIS = 15;
-// lamp check interval in seconds
-const uint8_t LIGHT_CHECK_INTERVAL = 10;
-
 SimpleTimer timer;
-WebServer server(80);
+WebServer server(WEB_SERVER_PORT);
 
-Device fan(FANRELAYPIN);
+#ifdef RADIO_POWER
+RCSwitch PowerManager::transmitter = RCSwitch();
+Device hum(HUM_ON_CODE, HUM_OFF_CODE);
+Device lamp(LAMP_ON_CODE, LAMP_OFF_CODE);
+Device fan(FAN_ON_CODE, FAN_OFF_CODE);
+#else
 Device hum(HUMRELAYPIN);
 Device lamp(LAMPRELAYPIN);
+Device fan(FANRELAYPIN);
+#endif
 WaterDevice waterDevice(PUMPPIN);
 HTU2xDDevice htu2xD;  // HTU21D temperature and humidity sensor
 LDRDevice ldr(LDRPIN);  // Light-Dependent Resistor (photoresistor) - light sensor
@@ -73,13 +58,30 @@ Scheduler humOnScheduler, humOffScheduler;
 
 MetricsExporter htu2xDDeviceExporter((ESP8266WebServer*)&server, (MetricsCollectable*)&htu2xD);
 
-
 /**************************/
 /*     FUNCTIONS     */
 /**************************/
 void initWiFi(String SSID, String PSK) {
+  IPAddress ipAddress;
+  IPAddress gateway;
+  IPAddress subnet;
+  IPAddress dns1;
+  IPAddress dns2;
+
+  ipAddress.fromString(IP_ADDRESS);
+  gateway.fromString(GATEWAY);
+  subnet.fromString(SUBNET);
+  dns1.fromString(DNS1);
+  dns2.fromString(DNS2);
+
+  WiFi.disconnect();
+  Serial.println(F("Hostname: ") + String(HOSTNAME));
+  WiFi.hostname(HOSTNAME);
+  WiFi.config(ipAddress, gateway, subnet, dns1, dns2);
   WiFi.begin(SSID, PSK);
   WiFi.enableSTA(true);
+  Serial.print(F("MAC: "));
+  Serial.println(WiFi.macAddress());
 
   Serial.print("Connecting to: " + SSID);
   while (WiFi.status() != WL_CONNECTED)
@@ -87,12 +89,17 @@ void initWiFi(String SSID, String PSK) {
     delay(500);
     Serial.print(".");
   }
+
   Serial.println();
   Serial.println(F("WiFi connected"));
-  Serial.print(F("MAC: "));
-  Serial.println(WiFi.macAddress());
   Serial.print(F("IP address: "));
   Serial.println(WiFi.localIP());
+}
+
+void initRadio() {
+  PowerManager::transmitter.enableTransmit(TX_PIN);
+  PowerManager::transmitter.setProtocol(RCSWITCH_PROTOCOL);
+  Serial.println(F("Radio transmission initialized"));
 }
 
 void systemRestart() {
@@ -112,9 +119,12 @@ void setup() {
   Serial.printf("%s", BOARD_IDENTITY);
   Serial.println(F(" is up. Hey there!"));
   Serial.printf("Firmware version: %s\n", VERSION);
-  Serial.println(F("************\n\n"));
+  Serial.println(F("************\n"));
 
   initWiFi(WIFI_SSID, WIFI_PSK);
+  #ifdef RADIO_POWER
+  initRadio();
+  #endif
 
   /* SimpleTimer function execution scheduling */
   timer.setInterval(htu2xD.getReadInterval(), []{htu2xD.tempDataHandler(&lamp, MAX_TEMP, TEMP_HYSTERESIS);});
@@ -135,9 +145,9 @@ void setup() {
   lampOnScheduler = Scheduler([]{lamp.scheduledPowerOn(lampOnScheduler);}, LAMP_ON_SCHEDULE);
   lampOffScheduler = Scheduler([]{lamp.scheduledPowerOff(lampOffScheduler);}, LAMP_OFF_SCHEDULE);
   /*
-   * Fan on/off schedule disabled due to switch on issues
+   * Fan on/off schedule disabled due to power on issues
    * while using computer fan with AC/DC 230V/12V power supply
-   * This is probably caused by the usage of solid-state relays
+   * It is probably caused by the usage of solid-state relays
    * See https://omronfs.omron.com/en_US/ecb/products/pdf/precautions_ssr.pdf
    */
   // fanOnScheduler = Scheduler([]{fan.scheduledPowerOn(fanOnScheduler);}, FAN_ON_SCHEDULE);

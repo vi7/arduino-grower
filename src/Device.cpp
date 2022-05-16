@@ -5,12 +5,20 @@
 #include "Device.h"
 
 void Device::powerOn() {
+    #ifdef RADIO_POWER
+    this->isPowerOn = PowerManager::manualPowerOn(&_onCode);
+    #else
     this->isPowerOn = PowerManager::manualPowerOn(_pin);
+    #endif
     this->isAutoPowerOn = true;
 }
 
 void Device::powerOff() {
+    #ifdef RADIO_POWER
+    this->isPowerOn = PowerManager::manualPowerOff(&_offCode);
+    #else
     this->isPowerOn = PowerManager::manualPowerOff(_pin);
+    #endif
     this->isAutoPowerOn = false;
 }
 

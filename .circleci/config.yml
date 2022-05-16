@@ -5,6 +5,9 @@ jobs:
     docker:
       - image: alpine
     steps:
+      - run:
+          name: Install packages
+          command: apk add --no-cache curl docker-cli make openssh git
       - checkout
       - setup_remote_docker:
           version: 20.10.7
@@ -12,7 +15,6 @@ jobs:
       - run:
           name: smoke-test
           command: |
-            apk add --no-cache curl docker-cli make git
             if [ "$(git log -1 --format=format:%H -- client/)" == "$CIRCLE_SHA1" ]
             then
              make client-test
@@ -25,12 +27,12 @@ jobs:
     docker:
       - image: alpine
     steps:
+      - run:
+          name: Install packages
+          command: apk add --no-cache docker-cli make openssh git
       - checkout
       - setup_remote_docker:
           version: 20.10.7
-      - run:
-          name: Install packages
-          command: apk add --no-cache docker-cli make
       - run:
           name: Docker image release
           command: |
