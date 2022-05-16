@@ -81,8 +81,8 @@ const uint8_t TEMP_HYSTERESIS = 10;
 // Recommended RH values:
 // - vegetative - 60%
 // - flowering - 50%
-const uint8_t MAX_RH = 70;
-const uint8_t RH_HYSTERESIS = 30;
+const uint8_t MAX_RH = 60;
+const uint8_t RH_HYSTERESIS = 25;
 // lamp check interval in seconds
 const uint8_t LIGHT_CHECK_INTERVAL = 10;
 
