@@ -14,19 +14,19 @@ const schedule LAMP_ON_SCHEDULE = {
   0,    // sec
   0,    // min
   22,   // hour
-  27,    // day
-  11,    // month
-  2021, // year
+  24,    // day
+  07,    // month
+  2022, // year
   1,    // interval in days
 };
 
 const schedule LAMP_OFF_SCHEDULE = {
   0,    // sec
   0,    // min
-  18,   // hour
-  27,    // day
-  11,    // month
-  2021, // year
+  16,   // hour
+  24,    // day
+  07,    // month
+  2022, // year
   1,    // interval in days
 };
 
