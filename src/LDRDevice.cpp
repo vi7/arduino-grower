@@ -10,7 +10,6 @@ uint16_t LDRDevice::getLightValue() {
 
 void LDRDevice::lampStatus() {
   uint16_t lightVal = getLightValue();
-  // TODO: candidate for debug logging
   // Serial.println("LDR sensor: " + String(lightVal));
   if (lightVal < LAMP_ON_VALUE && !isPowerOn) {
     Serial.println(F("LDR sensor: lamp is on"));

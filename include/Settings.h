@@ -59,12 +59,14 @@
   #define SSR_OUTLET_ON   0x17703
   #define SSR_OUTLET_OFF  0x1770C
 
-  #define HUM_ON_CODE   SSR_OUTLET_ON
-  #define HUM_OFF_CODE  SSR_OUTLET_OFF
-  #define FAN_ON_CODE   OUTLET3_ON
-  #define FAN_OFF_CODE  OUTLET3_OFF
-  #define LAMP_ON_CODE  OUTLET4_ON
-  #define LAMP_OFF_CODE OUTLET4_OFF
+  #define HUM_ON_CODE         SSR_OUTLET_ON
+  #define HUM_OFF_CODE        SSR_OUTLET_OFF
+  #define HUM_MAINS_ON_CODE   OUTLET2_ON
+  #define HUM_MAINS_OFF_CODE  OUTLET2_OFF
+  #define FAN_ON_CODE         OUTLET3_ON
+  #define FAN_OFF_CODE        OUTLET3_OFF
+  #define LAMP_ON_CODE        OUTLET4_ON
+  #define LAMP_OFF_CODE       OUTLET4_OFF
 #else
   #define LAMPRELAYPIN  0  // white/light-brown
   #define HUMRELAYPIN   2   // violet

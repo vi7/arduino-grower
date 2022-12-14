@@ -80,7 +80,7 @@ const endpoint HUM_STATUS = {
     DEVICE_STATUS
 };
 
-endpoint DHT_ENDPOINTS[] = {TEMP_STATUS, HUM_STATUS};
+endpoint HT_ENDPOINTS[] = {TEMP_STATUS, HUM_STATUS};
 
 
 const endpoint LDR_STATUS = {

@@ -40,6 +40,11 @@ WebServer server(WEB_SERVER_PORT);
 #ifdef RADIO_POWER
 RCSwitch PowerManager::transmitter = RCSwitch();
 Device hum(HUM_ON_CODE, HUM_OFF_CODE);
+/*
+ * Additional 'humMains' device switches on an outlet on main power
+ * extender where we have humidifier power outlet connected
+ */
+Device humMains(HUM_MAINS_ON_CODE, HUM_MAINS_OFF_CODE);
 Device lamp(LAMP_ON_CODE, LAMP_OFF_CODE);
 Device fan(FAN_ON_CODE, FAN_OFF_CODE);
 #else
@@ -131,12 +136,7 @@ void setup() {
   timer.setInterval(htu2xD.getReadInterval(), []{htu2xD.rhDataHandler(&hum, MAX_RH, RH_HYSTERESIS);});
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, []{ldr.lampStatus();});
 
-  // TODO: candidate for debug logging
-  // Serial.print(F("[MAIN] [D] Requested watering start time: "));
-  // Serial.println(waterScheduler.getStartDateTime());
-  // Serial.print(F("[MAIN] [D] Next watering scheduled on: "));
-  // Serial.println(waterScheduler.getNextDateTime());
-
+  humMains.powerOn();
   waterScheduler = Scheduler([]{
     waterDevice.scheduledWater(
       waterScheduler, []{waterDevice.powerOff();}
@@ -144,12 +144,7 @@ void setup() {
   }, WATER_SCHEDULE);
   lampOnScheduler = Scheduler([]{lamp.scheduledPowerOn(lampOnScheduler);}, LAMP_ON_SCHEDULE);
   lampOffScheduler = Scheduler([]{lamp.scheduledPowerOff(lampOffScheduler);}, LAMP_OFF_SCHEDULE);
-  /*
-   * Fan on/off schedule disabled due to power on issues
-   * while using computer fan with AC/DC 230V/12V power supply
-   * It is probably caused by the usage of solid-state relays
-   * See https://omronfs.omron.com/en_US/ecb/products/pdf/precautions_ssr.pdf
-   */
+  /* Uncomment lines below to enable automatic on/off schedule for the fan */
   // fanOnScheduler = Scheduler([]{fan.scheduledPowerOn(fanOnScheduler);}, FAN_ON_SCHEDULE);
   // fanOffScheduler = Scheduler([]{fan.scheduledPowerOff(fanOffScheduler);}, FAN_OFF_SCHEDULE);
   humOnScheduler = Scheduler([]{hum.scheduledPowerOn(humOnScheduler);}, HUM_ON_SCHEDULE);
@@ -159,8 +154,7 @@ void setup() {
   server.registerEndpoint(&fan, FAN_ENDPOINTS, sizeof(FAN_ENDPOINTS)/sizeof(FAN_ENDPOINTS[0]));
   server.registerEndpoint(&hum, HUM_ENDPOINTS, sizeof(HUM_ENDPOINTS)/sizeof(HUM_ENDPOINTS[0]));
   server.registerEndpoint(&waterDevice, WATER_ENDPOINTS, sizeof(WATER_ENDPOINTS)/sizeof(WATER_ENDPOINTS[0]));
-  // TODO: rename DHT endpoints to HTU2xD endpoints
-  server.registerEndpoint(&htu2xD, DHT_ENDPOINTS, sizeof(DHT_ENDPOINTS)/sizeof(DHT_ENDPOINTS[0]));
+  server.registerEndpoint(&htu2xD, HT_ENDPOINTS, sizeof(HT_ENDPOINTS)/sizeof(HT_ENDPOINTS[0]));
   server.registerEndpoint(&ldr, LDR_ENDPOINTS, sizeof(LDR_ENDPOINTS)/sizeof(LDR_ENDPOINTS[0]));
 
   server.begin();
