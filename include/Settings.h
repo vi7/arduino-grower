@@ -59,6 +59,8 @@
   #define SSR_OUTLET_ON   0x17703
   #define SSR_OUTLET_OFF  0x1770C
 
+  #define OUTFAN_ON_CODE      OUTLET1_ON
+  #define OUTFAN_OFF_CODE     OUTLET1_OFF
   #define HUM_ON_CODE         SSR_OUTLET_ON
   #define HUM_OFF_CODE        SSR_OUTLET_OFF
   #define HUM_MAINS_ON_CODE   OUTLET2_ON

@@ -39,6 +39,7 @@ WebServer server(WEB_SERVER_PORT);
 
 #ifdef RADIO_POWER
 RCSwitch PowerManager::transmitter = RCSwitch();
+Device outFan(OUTFAN_ON_CODE, OUTFAN_OFF_CODE);
 Device hum(HUM_ON_CODE, HUM_OFF_CODE);
 /*
  * Additional 'humMains' device switches on an outlet on main power
@@ -136,6 +137,7 @@ void setup() {
   timer.setInterval(htu2xD.getReadInterval(), []{htu2xD.rhDataHandler(&hum, MAX_RH, RH_HYSTERESIS);});
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, []{ldr.lampStatus();});
 
+  outFan.powerOn();
   humMains.powerOn();
   waterScheduler = Scheduler([]{
     waterDevice.scheduledWater(
