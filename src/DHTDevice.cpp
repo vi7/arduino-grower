@@ -4,16 +4,6 @@
 
 #include "DHTDevice.h"
 
-  /************ LOGGING ************/
-  // TODO: candidate for debug logging
-  // Serial.print("DHT " + String(dht.getStatusString()));
-  // Serial.print(F("\t"));
-  // Serial.print(F("temperature: "));
-  // Serial.print(temp);
-  // Serial.print(F("\t\t"));
-  // Serial.print(F("RH: "));
-  // Serial.println(rH);
-  /************  END LOGGING ************/
 void DHTDevice::tempDataHandler(Device* device, uint8_t MAX_TEMP, uint8_t TEMP_HYSTERESIS) {
   temp = dht.getTemperature();
   if (isnan(temp)) {

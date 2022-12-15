@@ -7,8 +7,10 @@
 void Device::powerOn() {
     #ifdef RADIO_POWER
     this->isPowerOn = PowerManager::manualPowerOn(&_onCode);
+    Serial.printf("Device powered on with code %X\n", _onCode);
     #else
     this->isPowerOn = PowerManager::manualPowerOn(_pin);
+    Serial.printf("Device powered on on pin %d\n", _pin);
     #endif
     this->isAutoPowerOn = true;
 }
@@ -16,8 +18,10 @@ void Device::powerOn() {
 void Device::powerOff() {
     #ifdef RADIO_POWER
     this->isPowerOn = PowerManager::manualPowerOff(&_offCode);
+    Serial.printf("Device powered off with code %X\n", _offCode);
     #else
     this->isPowerOn = PowerManager::manualPowerOff(_pin);
+    Serial.printf("Device powered off on pin %d\n", _pin);
     #endif
     this->isAutoPowerOn = false;
 }
