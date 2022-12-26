@@ -59,6 +59,8 @@
   #define SSR_OUTLET_ON   0x17703
   #define SSR_OUTLET_OFF  0x1770C
 
+  #define OUTFAN_ON_CODE      OUTLET1_ON
+  #define OUTFAN_OFF_CODE     OUTLET1_OFF
   #define HUM_ON_CODE         SSR_OUTLET_ON
   #define HUM_OFF_CODE        SSR_OUTLET_OFF
   #define HUM_MAINS_ON_CODE   OUTLET2_ON
@@ -83,7 +85,7 @@ const uint8_t TEMP_HYSTERESIS = 10;
 // Recommended RH values:
 // - vegetative - 60%
 // - flowering - 50%
-const uint8_t MAX_RH = 60;
+const uint8_t MAX_RH = 50;
 const uint8_t RH_HYSTERESIS = 20;
 // lamp check interval in seconds
 const uint8_t LIGHT_CHECK_INTERVAL = 10;

@@ -39,6 +39,7 @@ WebServer server(WEB_SERVER_PORT);
 
 #ifdef RADIO_POWER
 RCSwitch PowerManager::transmitter = RCSwitch();
+Device outFan(OUTFAN_ON_CODE, OUTFAN_OFF_CODE);
 Device hum(HUM_ON_CODE, HUM_OFF_CODE);
 /*
  * Additional 'humMains' device switches on an outlet on main power
@@ -136,6 +137,7 @@ void setup() {
   timer.setInterval(htu2xD.getReadInterval(), []{htu2xD.rhDataHandler(&hum, MAX_RH, RH_HYSTERESIS);});
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, []{ldr.lampStatus();});
 
+  outFan.powerOn();
   humMains.powerOn();
   waterScheduler = Scheduler([]{
     waterDevice.scheduledWater(
@@ -144,9 +146,10 @@ void setup() {
   }, WATER_SCHEDULE);
   lampOnScheduler = Scheduler([]{lamp.scheduledPowerOn(lampOnScheduler);}, LAMP_ON_SCHEDULE);
   lampOffScheduler = Scheduler([]{lamp.scheduledPowerOff(lampOffScheduler);}, LAMP_OFF_SCHEDULE);
-  /* Uncomment lines below to enable automatic on/off schedule for the fan */
+  /* Uncomment scheduler lines below to enable automatic on/off for the fan */
   // fanOnScheduler = Scheduler([]{fan.scheduledPowerOn(fanOnScheduler);}, FAN_ON_SCHEDULE);
   // fanOffScheduler = Scheduler([]{fan.scheduledPowerOff(fanOffScheduler);}, FAN_OFF_SCHEDULE);
+  fan.powerOn();
   humOnScheduler = Scheduler([]{hum.scheduledPowerOn(humOnScheduler);}, HUM_ON_SCHEDULE);
   humOffScheduler = Scheduler([]{hum.scheduledPowerOff(humOffScheduler);}, HUM_OFF_SCHEDULE);
 
