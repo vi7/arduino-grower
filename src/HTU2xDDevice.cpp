@@ -40,9 +40,15 @@ void HTU2xDDevice::rhDataHandler(Device* device, uint8_t MAX_RH, uint8_t RH_HYST
 }
 
 String HTU2xDDevice::status() {
+    readCurrentData();
     return "{\"temperature\":\"" + String(temp, 1) +"\",\"humidity\":\"" + String(rH, 0) +"\"}";
 }
 
+void HTU2xDDevice::readCurrentData() {
+  temp = htu2xD->readTemperature();
+  rH = htu2xD->getCompensatedHumidity(temp);
+  _uncompRH = htu2xD->readHumidity();
+}
 
 /*******************************/
 /** Metrics collector methods **/
@@ -54,6 +60,7 @@ String HTU2xDDevice::status() {
 void HTU2xDDevice::collect(String *metrics) {
   _metrics.clear();
 
+  readCurrentData();
   metricTemp();
   metricHumidity();
   metricUncompHum();
@@ -95,7 +102,7 @@ void HTU2xDDevice::metricUncompHum() {
     "htu2xd_uncomp_humidity_percent{model=\"%s\"} %f\n";
 
   char metric[BUFSIZE];
-  snprintf(metric, BUFSIZE, responseTemplate, HTU2XD_NAME, htu2xD->readHumidity());
+  snprintf(metric, BUFSIZE, responseTemplate, HTU2XD_NAME, _uncompRH);
   _metrics.concat(metric);
 }
 

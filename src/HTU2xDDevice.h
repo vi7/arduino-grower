@@ -50,6 +50,9 @@ class HTU2xDDevice: public Device, MetricsCollectable {
         HTU2xD_SHT2x_SI70xx *htu2xD;
         String _metrics;
         uint32_t _tempReadErrs = 0, _rHReadErrs = 0;
+        float _uncompRH;
+
+        void readCurrentData();
 
         void metricTemp();
         void metricHumidity();
