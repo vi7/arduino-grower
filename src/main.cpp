@@ -134,7 +134,7 @@ void setup() {
 
   /* SimpleTimer function execution scheduling */
   timer.setInterval(htu2xD.getReadInterval(), []{htu2xD.tempDataHandler(&lamp, MAX_TEMP, TEMP_HYSTERESIS);});
-  timer.setInterval(htu2xD.getReadInterval(), []{htu2xD.rhDataHandler(&hum, MAX_RH, RH_HYSTERESIS);});
+  timer.setInterval(180000, []{htu2xD.rhDataHandler(&hum, MAX_RH, RH_HYSTERESIS);});
   timer.setInterval(LIGHT_CHECK_INTERVAL * 1000, []{ldr.lampStatus();});
 
   outFan.powerOn();
