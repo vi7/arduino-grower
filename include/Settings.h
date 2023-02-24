@@ -9,7 +9,7 @@
  *
  * !!! DO NOT USE pins 5(D1),4(D2)
  * because they are reserved
- * for I2C bus SCL,SDA !!!
+ * for I2C bus SCL (5), SDA (4) !!!
  *
  * !! WARNING !!
  */
@@ -40,12 +40,12 @@
 
 #ifdef RADIO_POWER
   #define TX_PIN 2  // D4 - orange
-  #define RCSWITCH_PROTOCOL 13
-  /*
-   * ORNO OR-AE-13132(GS) power extender codes
-   */
   #define MSG_LENGTH 24
 
+  /*
+   * ORNO OR-AE-13132(GS) power extender codes and configs
+   */
+  #define RCSWITCH_PROTOCOL 13
   #define OUTLET1_ON  0x15533
   #define OUTLET1_OFF 0x1553C
   #define OUTLET2_ON  0x155C3
@@ -56,13 +56,19 @@
   #define OUTLET4_OFF 0x15D0C
   #define OUTLET5_ON  0x17503
   #define OUTLET5_OFF 0x1750C
-  #define SSR_OUTLET_ON   0x17703
-  #define SSR_OUTLET_OFF  0x1770C
+
+  /*
+   * Custom TX codes and configs
+   * for the external power outlet
+   */
+  #define EXT_RCSWITCH_PROTOCOL 1
+  #define EXT_OUTLET_ON   0x17703
+  #define EXT_OUTLET_OFF  0x1770C
 
   #define OUTFAN_ON_CODE      OUTLET1_ON
   #define OUTFAN_OFF_CODE     OUTLET1_OFF
-  #define HUM_ON_CODE         SSR_OUTLET_ON
-  #define HUM_OFF_CODE        SSR_OUTLET_OFF
+  #define HUM_ON_CODE         EXT_OUTLET_ON
+  #define HUM_OFF_CODE        EXT_OUTLET_OFF
   #define HUM_MAINS_ON_CODE   OUTLET2_ON
   #define HUM_MAINS_OFF_CODE  OUTLET2_OFF
   #define FAN_ON_CODE         OUTLET3_ON
