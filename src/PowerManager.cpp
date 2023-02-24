@@ -17,12 +17,24 @@ void PowerManager::autoPower(bool *autoControl, bool *currentState, float *currV
 }
 
 bool PowerManager::manualPowerOn(uint32_t *onCode) {
+  // Override TX protocol for the specific device
+  if (*onCode == HUM_ON_CODE) {
+    PowerManager::transmitter.setProtocol(EXT_RCSWITCH_PROTOCOL);
+  }
   PowerManager::transmitter.send(*onCode, MSG_LENGTH);
+  // Ensure default TX protocol
+  PowerManager::transmitter.setProtocol(RCSWITCH_PROTOCOL);
   return true;
 }
 
 bool PowerManager::manualPowerOff(uint32_t *offCode) {
+  // Override TX protocol for the specific device
+  if (*offCode == HUM_OFF_CODE) {
+    PowerManager::transmitter.setProtocol(EXT_RCSWITCH_PROTOCOL);
+  }
   PowerManager::transmitter.send(*offCode, MSG_LENGTH);
+  // Ensure default TX protocol
+  PowerManager::transmitter.setProtocol(RCSWITCH_PROTOCOL);
   return false;
 }
 #else
