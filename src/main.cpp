@@ -60,7 +60,8 @@ LDRDevice ldr(LDRPIN);  // Light-Dependent Resistor (photoresistor) - light sens
 Scheduler waterScheduler;
 Scheduler lampOnScheduler, lampOffScheduler;
 Scheduler fanOnScheduler, fanOffScheduler;
-Scheduler humOnScheduler, humOffScheduler;
+// Disable Humidifier scheduler until we have separate on and off code again (or forever?)
+// Scheduler humOnScheduler, humOffScheduler;
 
 MetricsExporter htu2xDDeviceExporter((ESP8266WebServer*)&server, (MetricsCollectable*)&htu2xD);
 
@@ -150,8 +151,9 @@ void setup() {
   // fanOnScheduler = Scheduler([]{fan.scheduledPowerOn(fanOnScheduler);}, FAN_ON_SCHEDULE);
   // fanOffScheduler = Scheduler([]{fan.scheduledPowerOff(fanOffScheduler);}, FAN_OFF_SCHEDULE);
   fan.powerOn();
-  humOnScheduler = Scheduler([]{hum.scheduledPowerOn(humOnScheduler);}, HUM_ON_SCHEDULE);
-  humOffScheduler = Scheduler([]{hum.scheduledPowerOff(humOffScheduler);}, HUM_OFF_SCHEDULE);
+  // Disable Humidifier scheduler until we have separate on and off code again (or forever?)
+  // humOnScheduler = Scheduler([]{hum.scheduledPowerOn(humOnScheduler);}, HUM_ON_SCHEDULE);
+  // humOffScheduler = Scheduler([]{hum.scheduledPowerOff(humOffScheduler);}, HUM_OFF_SCHEDULE);
 
   server.registerEndpoint(&lamp, LAMP_ENDPOINTS, sizeof(LAMP_ENDPOINTS)/sizeof(LAMP_ENDPOINTS[0]));
   server.registerEndpoint(&fan, FAN_ENDPOINTS, sizeof(FAN_ENDPOINTS)/sizeof(FAN_ENDPOINTS[0]));
