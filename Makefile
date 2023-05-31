@@ -71,7 +71,7 @@ client-run: build ## Build and run Docker image of the web client
 client-rm: ## Stop and remove web client container
 	@docker rm -vf $(APP_NAME)-test
 
-client-deploy: ## Deploy web client to the server. Pass APP_VERSION=x.y.z to override version
+client-deploy: ## Deploy web client to the server using Docker Compose. Pass APP_VERSION=x.y.z to override version
 	@echo 'deploying web client'
 	@( APP_VERSION=$(APP_VERSION) docker-compose --project-name $(APP_NAME) \
 		--file client/docker-compose.yml \
