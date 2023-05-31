@@ -15,6 +15,23 @@ Supports the following functionality:
 - Prometheus compatible metrics
 - REST API endpoints for the remote monitoring and control of the station
 
+
+**Table of contents**
+
+- [Requirements](#requirements)
+  - [IDE and Libraries](#ide-and-libraries)
+  - [Hardware](#hardware)
+- [Hardware configuration](#hardware-configuration)
+- [Sofware configuration](#sofware-configuration)
+  - [Web client](#web-client)
+    - [Kubernetes / K8S](#kubernetes--k8s)
+    - [[Obsolete] Deploy via Docker Compose](#obsolete-deploy-via-docker-compose)
+  - [Monitoring](#monitoring)
+- [Development](#development)
+  - [Web client](#web-client-1)
+  - [Release process](#release-process)
+
+
 Requirements
 ------------
 
@@ -43,6 +60,13 @@ Sofware configuration
 
 ### Web client
 
+#### Kubernetes / K8S
+
+Deployment: `kubectl apply -f client/grower-ui.yaml`
+
+To get web client URL run: `echo "http://$(kubectl get ingress grower-ui -ojsonpath='{.spec.rules[0].host}')"`
+
+#### [Obsolete] Deploy via Docker Compose
 Deploy web client container to the host defined in the [.circleci/ci.env](.circleci/ci.env):
 ```bash
 make client-deploy
